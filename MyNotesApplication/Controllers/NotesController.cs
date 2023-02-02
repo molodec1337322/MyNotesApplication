@@ -2,6 +2,7 @@
 using MyNotesApplication.Data.Interfaces;
 using MyNotesApplication.Data.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MyNotesApplication.Controllers
 {
@@ -18,10 +19,13 @@ namespace MyNotesApplication.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public string Test()
         {
             var res = _noteRepository.Get(0);
             return res == null? "ok" : res.ToString();
         }
+
+        
     }
 }

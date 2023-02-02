@@ -6,6 +6,6 @@
         T Get(int id);
         T Add(T entity);
         T Update(T entity);
-        Task Delete(int id);
+        bool Delete(int id);
     }
 }

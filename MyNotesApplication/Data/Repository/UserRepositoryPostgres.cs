@@ -1,5 +1,6 @@
 ﻿using MyNotesApplication.Data.Interfaces;
 using MyNotesApplication.Data.Models;
+using System.Linq;
 
 namespace MyNotesApplication.Data.Repository
 {
@@ -17,27 +18,27 @@ namespace MyNotesApplication.Data.Repository
 
         public User Add(User entity)
         {
-            throw new NotImplementedException();
+            _myDBContext.Add(entity);
+            return entity;
         }
 
-        public Task Delete(int id)
+        public bool Delete(int id)
         {
-            throw new NotImplementedException();
+            _myDBContext.Remove(id);
+            return true;
         }
 
-        public User Get(int id)
-        {
-            throw new NotImplementedException();
-        }
+        public User Get(int id) => _myDBContext.Users.Find(id);
 
         public List<User> GetAll()
         {
-            throw new NotImplementedException();
+            return _myDBContext.Users.ToList();
         }
 
         public User Update(User entity)
         {
-            throw new NotImplementedException();
+            _myDBContext.Update(entity);
+            return entity;
         }
     }
 }

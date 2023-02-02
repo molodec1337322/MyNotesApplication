@@ -18,7 +18,7 @@ namespace MyNotesApplication.Data.Repository
             throw new NotImplementedException();
         }
 
-        public Task Delete(int id)
+        public bool Delete(int id)
         {
             throw new NotImplementedException();
         }
