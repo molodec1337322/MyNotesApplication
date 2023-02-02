@@ -23,12 +23,12 @@ namespace MyNotesApplication.Controllers
         {
             try
             {
-                AuthData authData = await HttpContext.Request.ReadFromJsonAsync<AuthData>();
+                AuthData? authData = await HttpContext.Request.ReadFromJsonAsync<AuthData>();
 
                 string email = authData.Email;
                 string password = authData.Paasword;
 
-                User user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email && u.Password == password);
+                User? user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email && u.Password == password);
 
                 if(user != null)
                 {
@@ -41,7 +41,7 @@ namespace MyNotesApplication.Controllers
                             signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
 
 
-                    await HttpContext.Response.WriteAsJsonAsync(new JwtSecurityTokenHandler().WriteToken(jwt));
+                    await HttpContext.Response.WriteAsJsonAsync(new { Bearer = ": " + new JwtSecurityTokenHandler().WriteToken(jwt) });
                 }
                 else
                 {
