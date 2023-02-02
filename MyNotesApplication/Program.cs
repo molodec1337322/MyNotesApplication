@@ -14,6 +14,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 IConfigurationRoot _configString = new ConfigurationBuilder().SetBasePath(builder.Environment.ContentRootPath).AddJsonFile("DBConfig.json").Build();
 
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession();
 builder.Services.AddControllers();
 builder.Services.AddDbContext<MyDBContext>(options => options.UseNpgsql(_configString.GetConnectionString("PostgreSQLConnection")));
 builder.Services.AddScoped<IRepository<Note>, NoteRepositoryPostgres>();
@@ -35,6 +37,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+app.UseSession();
 
 app.UseHttpsRedirection();
 app.UseRouting();

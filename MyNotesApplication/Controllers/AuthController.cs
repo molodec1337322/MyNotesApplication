@@ -18,18 +18,41 @@ namespace MyNotesApplication.Controllers
         }
 
         [HttpPost]
-        [Route("Login/{username}")]
-        public string Login(string username)
+        [Route("Login")]
+        public async void Login()
         {
-            var claims = new List<Claim> { new Claim(ClaimTypes.Name, username) };
-            var jwt = new JwtSecurityToken(
-                    issuer: AuthOptions.ISSUER,
-                    audience: AuthOptions.AUDIENCE,
-                    claims: claims,
-                    expires: DateTime.UtcNow.Add(TimeSpan.FromDays(1)),
-                    signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
+            try
+            {
+                AuthData authData = await HttpContext.Request.ReadFromJsonAsync<AuthData>();
 
-            return new JwtSecurityTokenHandler().WriteToken(jwt).ToString();
+                string email = authData.Email;
+                string password = authData.Paasword;
+
+                User user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email && u.Password == password);
+
+                if(user != null)
+                {
+                    var claims = new List<Claim> { new Claim(ClaimTypes.Name, user.Username) };
+                    var jwt = new JwtSecurityToken(
+                            issuer: AuthOptions.ISSUER,
+                            audience: AuthOptions.AUDIENCE,
+                            claims: claims,
+                            expires: DateTime.UtcNow.Add(TimeSpan.FromHours(12)),
+                            signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
+
+
+                    await HttpContext.Response.WriteAsJsonAsync(new JwtSecurityTokenHandler().WriteToken(jwt));
+                }
+                else
+                {
+                    await HttpContext.Response.WriteAsJsonAsync(new { message = "userNotFound"});
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                await HttpContext.Response.WriteAsJsonAsync(new { message="error", exception=ex.Message});
+            }
         }
 
         [HttpPost]
@@ -45,5 +68,7 @@ namespace MyNotesApplication.Controllers
         {
             return View();
         }
+
+        public record AuthData(string Email, string Paasword);
     }
 }
