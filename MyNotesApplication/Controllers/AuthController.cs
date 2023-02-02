@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using MyNotesApplication.Data.Interfaces;
 using MyNotesApplication.Data.Models;
@@ -17,6 +20,10 @@ namespace MyNotesApplication.Controllers
             _userRepository = userRepo;
         }
 
+        /// <summary>
+        /// Req: {"Email": "123", "Password": "112"}
+        /// Res: {Bearer: jwtToken}
+        /// </summary>
         [HttpPost]
         [Route("Login")]
         public async void Login()
@@ -30,18 +37,29 @@ namespace MyNotesApplication.Controllers
 
                 User? user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email && u.Password == password);
 
-                if(user != null)
+                
+
+                if (user != null)
                 {
-                    var claims = new List<Claim> { new Claim(ClaimTypes.Name, user.Username) };
-                    var jwt = new JwtSecurityToken(
-                            issuer: AuthOptions.ISSUER,
-                            audience: AuthOptions.AUDIENCE,
-                            claims: claims,
-                            expires: DateTime.UtcNow.Add(TimeSpan.FromHours(12)),
-                            signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
+                    PasswordHasher<User> ph = new PasswordHasher<User>();
+                    if(ph.VerifyHashedPassword(user, user.Password, password) == PasswordVerificationResult.Success)
+                    {
+                        var claims = new List<Claim> { new Claim(ClaimTypes.Name, user.Username) };
+                        var jwt = new JwtSecurityToken(
+                                issuer: AuthOptions.ISSUER,
+                                audience: AuthOptions.AUDIENCE,
+                                claims: claims,
+                                expires: DateTime.UtcNow.Add(TimeSpan.FromHours(12)),
+                                signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
 
 
-                    await HttpContext.Response.WriteAsJsonAsync(new { Bearer = ": " + new JwtSecurityTokenHandler().WriteToken(jwt) });
+                        await HttpContext.Response.WriteAsJsonAsync(new { Bearer = ": " + new JwtSecurityTokenHandler().WriteToken(jwt) });
+                    }
+                    else
+                    {
+                        await HttpContext.Response.WriteAsJsonAsync(new { message = "userNotFound" });
+                    }
+                     
                 }
                 else
                 {
@@ -59,7 +77,7 @@ namespace MyNotesApplication.Controllers
         [Route("Logout")]
         public void Logout() 
         {
-            
+
         }
 
         [HttpPost]
@@ -82,10 +100,14 @@ namespace MyNotesApplication.Controllers
                     newUser.Email = email;
                     newUser.Password = password;
                     newUser.Username = username;
+                    newUser.EmailConfirmed = false;
 
-                    _userRepository.Add(newUser);
+                    PasswordHasher<User> ph = new PasswordHasher<User>();
+                    newUser.Password = ph.HashPassword(newUser, password);
 
-                    await HttpContext.Response.WriteAsJsonAsync(new { message = "userCreated" });
+                    User createdUser = _userRepository.Add(newUser);
+
+                    HttpContext.Response.WriteAsJsonAsync(createdUser);
                 }
                 else
                 {
