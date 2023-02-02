@@ -10,7 +10,7 @@ namespace MyNotesApplication.Controllers
         [Route("/Home/Index")]
         public string Index()
         {
-            return "test";
+            return "<a></a>";
         }
     }
 }

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "TrQAl/qnjnxR93nxasDajsO7jfs8uvlk+BP6lxs3QJLmSzJp+8yTbdSFtkGEdTFxnV+WLX2RJ5/JN8STQC11Xg==",
+  "dgSpecHash": "q9F2hVQTDmsHHACQNQc0M3wFzN6kadS9jA12wo4oEetJLGgVu4OPsUltoIZVPTujUzA56bclKzXgQdHDqLwuHA==",
   "success": true,
   "projectFilePath": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\MyNotesApplication.csproj",
   "expectedPackageFiles": [
@@ -26,6 +26,8 @@
     "C:\\Users\\Molodec\\.nuget\\packages\\microsoft.extensions.primitives\\7.0.0\\microsoft.extensions.primitives.7.0.0.nupkg.sha512",
     "C:\\Users\\Molodec\\.nuget\\packages\\microsoft.web.infrastructure\\1.0.0\\microsoft.web.infrastructure.1.0.0.nupkg.sha512",
     "C:\\Users\\Molodec\\.nuget\\packages\\mono.texttemplating\\2.2.1\\mono.texttemplating.2.2.1.nupkg.sha512",
+    "C:\\Users\\Molodec\\.nuget\\packages\\npgsql\\7.0.1\\npgsql.7.0.1.nupkg.sha512",
+    "C:\\Users\\Molodec\\.nuget\\packages\\npgsql.entityframeworkcore.postgresql\\7.0.1\\npgsql.entityframeworkcore.postgresql.7.0.1.nupkg.sha512",
     "C:\\Users\\Molodec\\.nuget\\packages\\system.codedom\\4.4.0\\system.codedom.4.4.0.nupkg.sha512",
     "C:\\Users\\Molodec\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\6.0.0\\system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512",
     "C:\\Users\\Molodec\\.nuget\\packages\\system.text.encodings.web\\7.0.0\\system.text.encodings.web.7.0.0.nupkg.sha512",

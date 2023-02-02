@@ -1,4 +1,5 @@
-﻿using MyNotesApplication.Data.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using MyNotesApplication.Data.Interfaces;
 using MyNotesApplication.Data.Models;
 
 namespace MyNotesApplication.Data.Repository
@@ -12,7 +13,7 @@ namespace MyNotesApplication.Data.Repository
             _myDBContext = myDBContext;
         }
 
-        public Task<Note> Add(Note entity)
+        public Note Add(Note entity)
         {
             throw new NotImplementedException();
         }
@@ -22,17 +23,17 @@ namespace MyNotesApplication.Data.Repository
             throw new NotImplementedException();
         }
 
-        public Task<Note> Get(int id)
+        public Note Get(int id)
+        {
+            return _myDBContext.Notes.FirstOrDefault(n => n.Id == id);
+        }
+
+        public List<Note> GetAll()
         {
             throw new NotImplementedException();
         }
 
-        public Task<List<Note>> GetAll()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Note> Update(Note entity)
+        public Note Update(Note entity)
         {
             throw new NotImplementedException();
         }

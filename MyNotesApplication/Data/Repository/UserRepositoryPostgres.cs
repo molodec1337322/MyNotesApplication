@@ -15,7 +15,7 @@ namespace MyNotesApplication.Data.Repository
             _myDBContext = myDBContext;
         }
 
-        public Task<User> Add(User entity)
+        public User Add(User entity)
         {
             throw new NotImplementedException();
         }
@@ -25,17 +25,17 @@ namespace MyNotesApplication.Data.Repository
             throw new NotImplementedException();
         }
 
-        public Task<User> Get(int id)
+        public User Get(int id)
         {
             throw new NotImplementedException();
         }
 
-        public Task<List<User>> GetAll()
+        public List<User> GetAll()
         {
             throw new NotImplementedException();
         }
 
-        public Task<User> Update(User entity)
+        public User Update(User entity)
         {
             throw new NotImplementedException();
         }
