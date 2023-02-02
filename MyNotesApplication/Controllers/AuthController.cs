@@ -26,7 +26,7 @@ namespace MyNotesApplication.Controllers
                 AuthData? authData = await HttpContext.Request.ReadFromJsonAsync<AuthData>();
 
                 string email = authData.Email;
-                string password = authData.Paasword;
+                string password = authData.Password;
 
                 User? user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email && u.Password == password);
 
@@ -57,18 +57,49 @@ namespace MyNotesApplication.Controllers
 
         [HttpPost]
         [Route("Logout")]
-        public ActionResult Logout() 
+        public void Logout() 
         {
-            return View();
+            
         }
 
         [HttpPost]
         [Route("Register")]
-        public ActionResult Register()
+        public async void Register()
         {
-            return View();
+            try
+            {
+                RegisterData? registerData = await HttpContext.Request.ReadFromJsonAsync<RegisterData>();
+
+                string email = registerData.Email;
+                string password = registerData.Password;
+                string username = registerData.Username;
+
+                User? user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email);
+
+                if (user == null)
+                {
+                    User newUser = new User();
+                    newUser.Email = email;
+                    newUser.Password = password;
+                    newUser.Username = username;
+
+                    _userRepository.Add(newUser);
+
+                    await HttpContext.Response.WriteAsJsonAsync(new { message = "userCreated" });
+                }
+                else
+                {
+                    await HttpContext.Response.WriteAsJsonAsync(new { message = "userAlreadyExists" });
+                }
+
+            }
+            catch (Exception ex)
+            {
+                await HttpContext.Response.WriteAsJsonAsync(new { message = "error", exception = ex.Message });
+            }
         }
 
-        public record AuthData(string Email, string Paasword);
+        public record AuthData(string Email, string Password);
+        public record RegisterData(string Email, string Username, string Password);
     }
 }
