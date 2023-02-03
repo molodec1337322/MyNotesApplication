@@ -62,3 +62,6 @@ C:\Users\Molodec\source\repos\MyNotesApplication\MyNotesApplication\bin\Debug\ne
 C:\Users\Molodec\source\repos\MyNotesApplication\MyNotesApplication\bin\Debug\net6.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 C:\Users\Molodec\source\repos\MyNotesApplication\MyNotesApplication\bin\Debug\net6.0\Microsoft.IdentityModel.Tokens.dll
 C:\Users\Molodec\source\repos\MyNotesApplication\MyNotesApplication\bin\Debug\net6.0\System.IdentityModel.Tokens.Jwt.dll
+C:\Users\Molodec\source\repos\MyNotesApplication\MyNotesApplication\bin\Debug\net6.0\MailKit.dll
+C:\Users\Molodec\source\repos\MyNotesApplication\MyNotesApplication\bin\Debug\net6.0\MimeKit.dll
+C:\Users\Molodec\source\repos\MyNotesApplication\MyNotesApplication\bin\Debug\net6.0\BouncyCastle.Crypto.dll

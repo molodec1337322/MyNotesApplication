@@ -7,6 +7,7 @@ using MyNotesApplication.Data.Interfaces;
 using MyNotesApplication.Data.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using MyNotesApplication.Services;
 
 namespace MyNotesApplication.Controllers
 {
@@ -26,7 +27,7 @@ namespace MyNotesApplication.Controllers
         /// </summary>
         [HttpPost]
         [Route("Login")]
-        public async void Login()
+        public async Task Login()
         {
             try
             {
@@ -73,7 +74,7 @@ namespace MyNotesApplication.Controllers
 
         [HttpPost]
         [Route("Logout")]
-        public void Logout() 
+        public async Task Logout() 
         {
 
         }
@@ -83,8 +84,8 @@ namespace MyNotesApplication.Controllers
         /// Res: {Bearer: jwtToken}
         /// </summary>
         [HttpPost]
-        [Route("Register")]
-        public async void Register()
+        [Route("Registration")]
+        public async Task Register()
         {
             try
             {
@@ -110,7 +111,19 @@ namespace MyNotesApplication.Controllers
                     User createdUser = _userRepository.Add(newUser);
                     await _userRepository.SaveChanges();
 
-                    await HttpContext.Response.WriteAsJsonAsync(createdUser);
+                    /*
+                    var code = await new UserManager<User>();
+                    var callbackUrl = Url.Action(
+                        "ConfirmEmail",
+                        "Account",
+                        new { userId = newUser.Id, code = code },
+                        protocol: HttpContext.Request.Scheme);
+
+                    var emailService = new EmailService();
+                    await emailService.SendEmailAsync(newUser.Email, "Подтвердите свою почту", "Подтвердите регистрацию, перейдя по ссылке: <a href='EmailConfirm/" + callbackUrl + "' >Подтвердить</a>");
+                    */
+
+                    await HttpContext.Response.WriteAsJsonAsync(new { message = "userConfirmEmail" });
                 }
                 else
                 {
@@ -122,6 +135,13 @@ namespace MyNotesApplication.Controllers
             {
                 await HttpContext.Response.WriteAsJsonAsync(new { message = "error", exception = ex.Message });
             }
+        }
+
+        [HttpGet]
+        [Route("EmailConfirm/{confirmationUrl}")]
+        public async Task EmailConfirm()
+        {
+
         }
 
         public record AuthData(string Email, string Password);
