@@ -5,10 +5,7 @@ using System.Linq;
 namespace MyNotesApplication.Data.Repository
 {
     public class UserRepositoryPostgres : IRepository<User>
-
-
     {
-
         private readonly MyDBContext _myDBContext;
 
         public UserRepositoryPostgres(MyDBContext myDBContext)
@@ -18,13 +15,13 @@ namespace MyNotesApplication.Data.Repository
 
         public User Add(User entity)
         {
-            _myDBContext.Add(entity);
+            _myDBContext.Users.Add(entity);
             return entity;
         }
 
-        public bool Delete(int id)
+        public bool Delete(User entity)
         {
-            _myDBContext.Remove(id);
+            _myDBContext.Users.Remove(entity);
             return true;
         }
 
@@ -35,9 +32,14 @@ namespace MyNotesApplication.Data.Repository
             return _myDBContext.Users.ToList();
         }
 
+        public async Task<int> SaveChanges()
+        {
+            return _myDBContext.SaveChanges();
+        }
+
         public User Update(User entity)
         {
-            _myDBContext.Update(entity);
+            _myDBContext.Users.Update(entity);
             return entity;
         }
     }

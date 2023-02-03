@@ -37,8 +37,6 @@ namespace MyNotesApplication.Controllers
 
                 User? user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email && u.Password == password);
 
-                
-
                 if (user != null)
                 {
                     PasswordHasher<User> ph = new PasswordHasher<User>();
@@ -106,8 +104,9 @@ namespace MyNotesApplication.Controllers
                     newUser.Password = ph.HashPassword(newUser, password);
 
                     User createdUser = _userRepository.Add(newUser);
+                    await _userRepository.SaveChanges();
 
-                    HttpContext.Response.WriteAsJsonAsync(createdUser);
+                    await HttpContext.Response.WriteAsJsonAsync(createdUser);
                 }
                 else
                 {

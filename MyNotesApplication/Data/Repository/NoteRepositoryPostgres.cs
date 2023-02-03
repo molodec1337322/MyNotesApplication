@@ -18,7 +18,7 @@ namespace MyNotesApplication.Data.Repository
             throw new NotImplementedException();
         }
 
-        public bool Delete(int id)
+        public bool Delete(Note entity)
         {
             throw new NotImplementedException();
         }
@@ -31,6 +31,11 @@ namespace MyNotesApplication.Data.Repository
         public List<Note> GetAll()
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<int> SaveChanges()
+        {
+            return _myDBContext.SaveChanges();
         }
 
         public Note Update(Note entity)
