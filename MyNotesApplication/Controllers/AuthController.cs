@@ -41,7 +41,7 @@ namespace MyNotesApplication.Controllers
 
                 User? user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email);
 
-                if (user != null)
+                if (user != null && !user.EmailConfirmed)
                 {
                     PasswordHasher<User> ph = new PasswordHasher<User>();
                     if(ph.VerifyHashedPassword(user, user.Password, password) == PasswordVerificationResult.Success)
