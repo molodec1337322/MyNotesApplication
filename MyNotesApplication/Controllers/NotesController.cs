@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace MyNotesApplication.Controllers
 {
-    [Route("api/[controller]/[action]")]
+    [Route("api/Notes")]
     public class NotesController : Controller
     {
         private readonly IRepository<Note> _noteRepository;
@@ -26,6 +26,24 @@ namespace MyNotesApplication.Controllers
             return res == null? "ok" : res.ToString();
         }
 
+        [HttpGet]
+        [Authorize]
+        public async void AllNotes()
+        {
+            HttpContext.Request.Headers.TryGetValue("Authorization", out var username);
+            username.ToString();
+
+            User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
+
+            if(user != null)
+            {
+                await HttpContext.Response.WriteAsJsonAsync( new {message = "ok" });
+            }
+            else
+            {
+                await HttpContext.Response.WriteAsJsonAsync(new { error = "notFound" });
+            }
+        }
         
     }
 }

@@ -35,7 +35,7 @@ namespace MyNotesApplication.Controllers
                 string email = authData.Email;
                 string password = authData.Password;
 
-                User? user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email && u.Password == password);
+                User? user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email);
 
                 if (user != null)
                 {
@@ -78,6 +78,10 @@ namespace MyNotesApplication.Controllers
 
         }
 
+        /// <summary>
+        /// Req: {"Email": "123", "Username": "Mol" "Password": "112"}
+        /// Res: {Bearer: jwtToken}
+        /// </summary>
         [HttpPost]
         [Route("Register")]
         public async void Register()
@@ -90,7 +94,7 @@ namespace MyNotesApplication.Controllers
                 string password = registerData.Password;
                 string username = registerData.Username;
 
-                User? user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email);
+                User? user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email || u.Username == username);
 
                 if (user == null)
                 {
