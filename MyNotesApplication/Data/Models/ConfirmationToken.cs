@@ -7,6 +7,6 @@
         public DateTime CreatedDate { get; set; }
         public DateTime ExpiredDate { get; set; }
         public int UserId { get; set; }
-        public User? User { get; set; }
+        public User User { get; set; }
     }
 }

@@ -11,7 +11,7 @@ namespace MyNotesApplication.Data.Models
         [DataType(DataType.Password)]
         public string Password { get; set; }
         public bool EmailConfirmed { get; set; }
-        public List<Note>? Notes { get; set; }
-        public ConfirmationToken? ConfirmationToken { get; set; }
+        public List<Note> Notes { get; set; }
+        public ConfirmationToken ConfirmationToken { get; set; }
     }
 }

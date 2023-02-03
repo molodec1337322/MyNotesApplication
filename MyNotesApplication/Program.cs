@@ -9,18 +9,22 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using MyNotesApplication.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-IConfigurationRoot _configString = new ConfigurationBuilder().SetBasePath(builder.Environment.ContentRootPath).AddJsonFile("DBConfig.json").Build();
+IConfigurationRoot _DBconfigString = new ConfigurationBuilder().SetBasePath(builder.Environment.ContentRootPath).AddJsonFile("DBConfig.json").Build();
 
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession();
 builder.Services.AddControllers();
-builder.Services.AddDbContext<MyDBContext>(options => options.UseNpgsql(_configString.GetConnectionString("PostgreSQLConnection")));
+
+builder.Services.AddDbContext<MyDBContext>(options => options.UseNpgsql(_DBconfigString.GetConnectionString("PostgreSQLConnection")));
 builder.Services.AddScoped<IRepository<Note>, NoteRepositoryPostgres>();
 builder.Services.AddScoped<IRepository<User>, UserRepositoryPostgres>();
 builder.Services.AddScoped<IRepository<ConfirmationToken>, ConfirmationTokenPostgres>();
+
+builder.Services.AddScoped<EmailService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {

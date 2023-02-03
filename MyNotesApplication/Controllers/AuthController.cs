@@ -16,12 +16,13 @@ namespace MyNotesApplication.Controllers
     {
         private readonly IRepository<User> _userRepository;
         private readonly IRepository<ConfirmationToken> _confirmationTokenRepository;
+        private readonly IConfiguration _appConfiguration;
 
-        public AuthController(IRepository<User> userRepo, IRepository<ConfirmationToken> confirmationTokenRepo)
+        public AuthController(IRepository<User> userRepo, IRepository<ConfirmationToken> confirmationTokenRepo, IConfiguration appConfiguration)
         {
             _userRepository = userRepo;
             _confirmationTokenRepository = confirmationTokenRepo;
-
+            _appConfiguration = appConfiguration;
         }
 
         /// <summary>
@@ -122,8 +123,9 @@ namespace MyNotesApplication.Controllers
                     ConfirmationToken createdToken = _confirmationTokenRepository.Add(newToken);
                     await _confirmationTokenRepository.SaveChanges();
 
-                    var emailService = new EmailService();
-                    await emailService.SendEmailAsync(newUser.Email, "Подтвердите свою почту", "Подтвердите регистрацию, перейдя по ссылке: <a href='EmailConfirm/" + createdToken.ConfirmationGUID + "' >Подтвердить</a>");
+                    var emailService = new EmailService(_appConfiguration);
+                    var confirmationUrl = Url.Action("EmailConfirm", "Auth", new { confirmationGuidUrl = createdToken.ConfirmationGUID }, protocol: HttpContext.Request.Scheme);
+                    await emailService.SendEmailAsync(newUser.Email, "Подтвердите свою почту", $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confirmationUrl}'>Подтвердить</a>");
 
                     await HttpContext.Response.WriteAsJsonAsync(new { message = "userConfirmEmail" });
                 }
