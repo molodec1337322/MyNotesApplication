@@ -26,11 +26,12 @@ namespace MyNotesApplication.Controllers
         [Route("")]
         public async Task AllNotes()
         {
-            HttpContext.Request.Headers.TryGetValue("Authorization", out var username);
-            username.ToString();
+            string username = GetUsernameFromJwtToken();
+            NoteData? noteData = await HttpContext.Request.ReadFromJsonAsync<NoteData>();
 
             User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
-            await HttpContext.Response.WriteAsJsonAsync(_noteRepository.GetAll().Where(n => n.UserId == user.Id));
+            //await HttpContext.Response.WriteAsJsonAsync(_noteRepository.GetAll().Where(n => n.UserId == user.Id));
+            await HttpContext.Response.WriteAsJsonAsync(user);
         }
 
         [HttpGet]
@@ -38,8 +39,8 @@ namespace MyNotesApplication.Controllers
         [Route("Get/{NoteId}")]
         public async Task GetNote(int NoteId)
         {
-            HttpContext.Request.Headers.TryGetValue("Authorization", out var username);
-            username.ToString();
+            string username = GetUsernameFromJwtToken();
+            NoteData? noteData = await HttpContext.Request.ReadFromJsonAsync<NoteData>();
 
             User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
             Note? note = _noteRepository.Get(NoteId);
@@ -70,10 +71,8 @@ namespace MyNotesApplication.Controllers
         [Route("Add")]
         public async Task AddNote()
         {
-            HttpContext.Request.Headers.TryGetValue("Authorization", out var token);
+            string username = GetUsernameFromJwtToken();
             NoteData? noteData = await HttpContext.Request.ReadFromJsonAsync<NoteData>();
-            token = token.ToString().Split(" ")[1];
-            string username = new JwtSecurityTokenHandler().ReadJwtToken(token).Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Name).Value;
 
             User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
 
@@ -97,5 +96,12 @@ namespace MyNotesApplication.Controllers
         }
         
         public record NoteData(string Name, string Text);
+
+        private string GetUsernameFromJwtToken()
+        {
+            HttpContext.Request.Headers.TryGetValue("Authorization", out var token);
+            token = token.ToString().Split(" ")[1];
+            return new JwtSecurityTokenHandler().ReadJwtToken(token).Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Name).Value;
+        }
     }
 }

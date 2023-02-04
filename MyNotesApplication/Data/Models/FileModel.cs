@@ -8,6 +8,7 @@
         public string Path { get; set; }
         public string Format { get; set; }
         public int NoteId { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore]
         public Note Note { get; set; }
     }
 }
