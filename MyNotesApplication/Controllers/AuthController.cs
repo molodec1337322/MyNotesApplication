@@ -31,7 +31,7 @@ namespace MyNotesApplication.Controllers
         /// </summary>
         [HttpPost]
         [Route("Login")]
-        public async Task<IActionResult> Login()
+        public async Task Login()
         {
             try
             {
@@ -42,7 +42,7 @@ namespace MyNotesApplication.Controllers
 
                 User? user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email);
 
-                if (user != null && !user.EmailConfirmed)
+                if (user != null && user.EmailConfirmed)
                 {
                     PasswordHasher<User> ph = new PasswordHasher<User>();
                     if(ph.VerifyHashedPassword(user, user.Password, password) == PasswordVerificationResult.Success)
@@ -56,35 +56,30 @@ namespace MyNotesApplication.Controllers
                                 signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
 
 
-                        await HttpContext.Response.WriteAsJsonAsync(new { Bearer = ": " + new JwtSecurityTokenHandler().WriteToken(jwt) });
-                        return Ok();
+                        await HttpContext.Response.WriteAsJsonAsync(new { Token = "Bearer " + new JwtSecurityTokenHandler().WriteToken(jwt) });
                     }
                     else
                     {
                         await HttpContext.Response.WriteAsJsonAsync(new { message = "userNotFound" });
-                        return Ok();
                     }
                      
                 }
                 else
                 {
                     await HttpContext.Response.WriteAsJsonAsync(new { message = "userNotFound"});
-                    return Ok();
                 }
                 
             }
             catch (Exception ex)
             {
                 await HttpContext.Response.WriteAsJsonAsync(new { message="error", exception=ex.Message});
-                return BadRequest(ex.Message);
             }
         }
 
         [HttpPost]
         [Route("Logout")]
-        public async Task<IActionResult> Logout() 
+        public async Task Logout() 
         {
-            return Ok();
         }
 
         /// <summary>
@@ -93,7 +88,7 @@ namespace MyNotesApplication.Controllers
         /// </summary>
         [HttpPost]
         [Route("Registration")]
-        public async Task<IActionResult> Register()
+        public async Task Register()
         {
             try
             {
@@ -132,12 +127,10 @@ namespace MyNotesApplication.Controllers
                     await emailService.SendEmailAsync(newUser.Email, "Подтвердите свою почту", $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confirmationUrl}'>Подтвердить</a>");
 
                     await HttpContext.Response.WriteAsJsonAsync(new { message = "userConfirmEmail" });
-                    return Ok();
                 }
                 else
                 {
-                    await HttpContext.Response.WriteAsJsonAsync(new { message = "userAlreadyExists" });
-                    return Ok();    
+                    await HttpContext.Response.WriteAsJsonAsync(new { message = "userAlreadyExists" });   
                 }
 
             }
@@ -145,13 +138,12 @@ namespace MyNotesApplication.Controllers
             {
                 Console.Write(ex.ToString());
                 await HttpContext.Response.WriteAsJsonAsync(new { message = "error", exception = ex.Message });
-                return BadRequest(ex.ToString());
             }
         }
 
         [HttpGet]
         [Route("EmailConfirm/{confirmationGuidUrl}")]
-        public async Task<IActionResult> EmailConfirm(string confirmationGuidUrl)
+        public async Task EmailConfirm(string confirmationGuidUrl)
         {
             ConfirmationToken? token = _confirmationTokenRepository.GetAll().FirstOrDefault(token => token.ConfirmationGUID == confirmationGuidUrl && token.ExpiredDate > DateTime.Now);
             if(token != null)
@@ -165,12 +157,10 @@ namespace MyNotesApplication.Controllers
                 await _userRepository.SaveChanges();
 
                 await HttpContext.Response.WriteAsync("confirmed");
-                return Ok();
             }
             else
             {
                 await HttpContext.Response.WriteAsync("confirmError");
-                return BadRequest();
             }
         }
 
