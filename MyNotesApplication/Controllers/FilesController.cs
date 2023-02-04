@@ -87,11 +87,42 @@ namespace MyNotesApplication.Controllers
 
         [HttpGet]
         [Authorize]
-        [Route("Download")]
-        public async Task DownloadFile()
+        [Route("Download/{FileId}")]
+        public async Task DownloadFile(int FileId)
         {
+            var username = GetUsernameFromJwtToken();
 
+            FileModel fileModel = _fileModelRepository.Get(FileId);
+
+            if (_notesRepository.Get(fileModel.NoteId)?.UserId == _userRepository.GetAll().FirstOrDefault(u => u.Username == username)?.Id)
+            {
+                
+            }
+            else
+            {
+                await HttpContext.Response.WriteAsJsonAsync(new { error = "noteNotFound" });
+            }
         }
+
+        [HttpDelete]
+        [Authorize]
+        [Route("Delete/{FileId}")]
+        public async Task DeleteFile(int FileId)
+        {
+            var username = GetUsernameFromJwtToken();
+
+            FileModel fileModel = _fileModelRepository.Get(FileId);
+
+            if (_notesRepository.Get(fileModel.NoteId)?.UserId == _userRepository.GetAll().FirstOrDefault(u => u.Username == username)?.Id)
+            {
+
+            }
+            else
+            {
+                await HttpContext.Response.WriteAsJsonAsync(new { error = "noteNotFound" });
+            }
+        }
+
         private string GetUsernameFromJwtToken()
         {
             HttpContext.Request.Headers.TryGetValue("Authorization", out var token);

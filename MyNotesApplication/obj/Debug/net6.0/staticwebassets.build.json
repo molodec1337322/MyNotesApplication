@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "CXx+2T2LQ7bgRBstueB+ao17fLgclJ3Rj5yhhtYGeaA=",
+  "Hash": "zaZEzTkSo8X3q43O1vF9u2VUXmwDrT11G5SRdIbP0FQ=",
   "Source": "MyNotesApplication",
   "BasePath": "_content/MyNotesApplication",
   "Mode": "Default",
@@ -15,40 +15,5 @@
       "Pattern": "**"
     }
   ],
-  "Assets": [
-    {
-      "Identity": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\Files\\fnygyllr.nlc",
-      "SourceId": "MyNotesApplication",
-      "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\",
-      "BasePath": "_content/MyNotesApplication",
-      "RelativePath": "Files/fnygyllr.nlc",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\Files\\fnygyllr.nlc"
-    },
-    {
-      "Identity": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\Files\\nxqqqaw3.jpeg",
-      "SourceId": "MyNotesApplication",
-      "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\",
-      "BasePath": "_content/MyNotesApplication",
-      "RelativePath": "Files/nxqqqaw3.jpeg",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\Files\\nxqqqaw3.jpeg"
-    }
-  ]
+  "Assets": []
 }

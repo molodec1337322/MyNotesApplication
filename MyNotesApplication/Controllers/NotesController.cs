@@ -67,7 +67,7 @@ namespace MyNotesApplication.Controllers
         /// Res {"message" = "ok"}
         /// </summary>
         /// <returns></returns>
-        [HttpPut]
+        [HttpPost]
         [Authorize]
         [Route("Add")]
         public async Task AddNote()
@@ -96,7 +96,7 @@ namespace MyNotesApplication.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpPut]
         [Authorize]
         [Route("Update/{NoteId}")]
         public async Task UpdateNote(int NoteId)
@@ -130,7 +130,7 @@ namespace MyNotesApplication.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpPut]
         [Authorize]
         [Route("Done/{NoteId}")]
         public async Task MarkNoteDone(int NoteId)
