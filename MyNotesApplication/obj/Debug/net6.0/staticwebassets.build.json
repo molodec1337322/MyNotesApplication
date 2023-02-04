@@ -1,11 +1,54 @@
 {
   "Version": 1,
-  "Hash": "0QtDE1D4663eHGNfDcOj30/XdqeCA863Ak+Jh3fEHEw=",
+  "Hash": "CXx+2T2LQ7bgRBstueB+ao17fLgclJ3Rj5yhhtYGeaA=",
   "Source": "MyNotesApplication",
   "BasePath": "_content/MyNotesApplication",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [],
-  "Assets": []
+  "DiscoveryPatterns": [
+    {
+      "Name": "MyNotesApplication\\wwwroot",
+      "Source": "MyNotesApplication",
+      "ContentRoot": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\",
+      "BasePath": "_content/MyNotesApplication",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\Files\\fnygyllr.nlc",
+      "SourceId": "MyNotesApplication",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\",
+      "BasePath": "_content/MyNotesApplication",
+      "RelativePath": "Files/fnygyllr.nlc",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\Files\\fnygyllr.nlc"
+    },
+    {
+      "Identity": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\Files\\nxqqqaw3.jpeg",
+      "SourceId": "MyNotesApplication",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\",
+      "BasePath": "_content/MyNotesApplication",
+      "RelativePath": "Files/nxqqqaw3.jpeg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\Files\\nxqqqaw3.jpeg"
+    }
+  ]
 }

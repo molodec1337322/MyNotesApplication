@@ -11,7 +11,7 @@ using MyNotesApplication.Services;
 
 namespace MyNotesApplication.Controllers
 {
-    [Route("api/auth")]
+    [Route("api/Auth")]
     public class AuthController : Controller
     {
         private readonly IRepository<User> _userRepository;

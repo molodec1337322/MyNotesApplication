@@ -14,11 +14,13 @@ namespace MyNotesApplication.Controllers
     {
         private readonly IRepository<Note> _noteRepository;
         private readonly IRepository<User> _userRepository;
+        private readonly IConfiguration _appConfiguration;
 
-        public NotesController(IRepository<Note> noteRepo, IRepository<User> userRepo)
+        public NotesController(IRepository<Note> noteRepo, IRepository<User> userRepo, IConfiguration appConfiguration)
         {
             _noteRepository = noteRepo;
             _userRepository = userRepo;
+            _appConfiguration = appConfiguration;
         }
 
         [HttpGet]
@@ -61,7 +63,7 @@ namespace MyNotesApplication.Controllers
         }
 
         /// <summary>
-        /// Req {"Name" = "Note1", "Text" = "Note Text"}
+        /// Req {"Name" = "Note1", "Text" = "Note Text", "PathToFile": "pathToFile/Null"}
         /// Res {"message" = "ok"}
         /// </summary>
         /// <returns></returns>
@@ -76,7 +78,7 @@ namespace MyNotesApplication.Controllers
             User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
 
             if(noteData != null)
-            {
+            {       
                 Note newNote = new Note();
                 newNote.Text = noteData.Text;
                 newNote.Name = noteData.Name;
@@ -190,7 +192,7 @@ namespace MyNotesApplication.Controllers
             }
         }
         
-        public record NoteData(string Name, string Text);
+        public record NoteData(string Name, string Text, string PathToFile);
 
         private string GetUsernameFromJwtToken()
         {

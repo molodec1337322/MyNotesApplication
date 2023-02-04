@@ -65,3 +65,4 @@ C:\Users\Molodec\source\repos\MyNotesApplication\MyNotesApplication\bin\Debug\ne
 C:\Users\Molodec\source\repos\MyNotesApplication\MyNotesApplication\bin\Debug\net6.0\MailKit.dll
 C:\Users\Molodec\source\repos\MyNotesApplication\MyNotesApplication\bin\Debug\net6.0\MimeKit.dll
 C:\Users\Molodec\source\repos\MyNotesApplication\MyNotesApplication\bin\Debug\net6.0\BouncyCastle.Crypto.dll
+C:\Users\Molodec\source\repos\MyNotesApplication\MyNotesApplication\bin\Debug\net6.0\MyNotesApplication.staticwebassets.runtime.json

@@ -1,0 +1,29 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\Files\\fnygyllr.nlc",
+      "PackagePath": "staticwebassets\\Files\\fnygyllr.nlc"
+    },
+    {
+      "Id": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\Files\\nxqqqaw3.jpeg",
+      "PackagePath": "staticwebassets\\Files\\nxqqqaw3.jpeg"
+    },
+    {
+      "Id": "obj\\Debug\\net6.0\\staticwebassets\\msbuild.MyNotesApplication.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net6.0\\staticwebassets\\msbuild.build.MyNotesApplication.props",
+      "PackagePath": "build\\MyNotesApplication.props"
+    },
+    {
+      "Id": "obj\\Debug\\net6.0\\staticwebassets\\msbuild.buildMultiTargeting.MyNotesApplication.props",
+      "PackagePath": "buildMultiTargeting\\MyNotesApplication.props"
+    },
+    {
+      "Id": "obj\\Debug\\net6.0\\staticwebassets\\msbuild.buildTransitive.MyNotesApplication.props",
+      "PackagePath": "buildTransitive\\MyNotesApplication.props"
+    }
+  ],
+  "ElementsToRemove": []
+}
