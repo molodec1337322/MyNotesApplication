@@ -1,12 +1,16 @@
 {
   "Files": [
     {
-      "Id": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\Files\\fnygyllr.nlc",
-      "PackagePath": "staticwebassets\\Files\\fnygyllr.nlc"
+      "Id": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\Files\\agvq3rzk.jpeg",
+      "PackagePath": "staticwebassets\\Files\\agvq3rzk.jpeg"
     },
     {
-      "Id": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\Files\\nxqqqaw3.jpeg",
-      "PackagePath": "staticwebassets\\Files\\nxqqqaw3.jpeg"
+      "Id": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\Files\\hokwwyjp.jpeg",
+      "PackagePath": "staticwebassets\\Files\\hokwwyjp.jpeg"
+    },
+    {
+      "Id": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\Files\\wxboxdm1.jpeg",
+      "PackagePath": "staticwebassets\\Files\\wxboxdm1.jpeg"
     },
     {
       "Id": "obj\\Debug\\net6.0\\staticwebassets\\msbuild.MyNotesApplication.Microsoft.AspNetCore.StaticWebAssets.props",

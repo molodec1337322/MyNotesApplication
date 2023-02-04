@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MyNotesApplication.Data.Interfaces;
 using MyNotesApplication.Data.Models;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net.Http.Headers;
 using System.Security.Claims;
 
 namespace MyNotesApplication.Controllers
@@ -50,9 +52,9 @@ namespace MyNotesApplication.Controllers
                     {
                         if (formFile.Length > 0)
                         {
-                            var fileType = formFile.ContentType.Split("/")[1];
+                            var fileType = formFile.ContentType;
                             var newFileName = Path.GetRandomFileName();
-                            newFileName = newFileName.Split(".")[0] +  "." + fileType;
+                            newFileName = newFileName.Split(".")[0] +  "." + formFile.ContentType.Split("/")[1];
 
                             var filePath = Path.Combine(fileDirectory, newFileName);
                             using (var stream = System.IO.File.Create(filePath))
@@ -64,43 +66,67 @@ namespace MyNotesApplication.Controllers
                             newFile.Name = newFileName;
                             newFile.NoteId = NoteId;
                             newFile.Path = filePath;
-                            newFile.Format = fileType;
+                            newFile.Type = fileType;
 
                             _fileModelRepository.Add(newFile);
                         }
                     }
                     await _fileModelRepository.SaveChanges();
 
-                    await HttpContext.Response.WriteAsJsonAsync(new { message = "Uploaded" });
+                    HttpContext.Response.StatusCode = 200;
                 }
                 catch (Exception ex)
                 {
                     Console.Write(ex.Message);
-                    await HttpContext.Response.WriteAsJsonAsync(new { error = ex.Message });
+                    HttpContext.Response.StatusCode = 500;
                 }
             }
             else
             {
-                await HttpContext.Response.WriteAsJsonAsync(new { error = "noteNotFound" });
+                HttpContext.Response.StatusCode = 400;
             }
         }
 
         [HttpGet]
         [Authorize]
         [Route("Download/{FileId}")]
-        public async Task DownloadFile(int FileId)
+        public async Task<HttpResponseMessage> DownloadFile(int FileId)
         {
             var username = GetUsernameFromJwtToken();
 
             FileModel fileModel = _fileModelRepository.Get(FileId);
+            HttpResponseMessage response = new HttpResponseMessage();
 
             if (_notesRepository.Get(fileModel.NoteId)?.UserId == _userRepository.GetAll().FirstOrDefault(u => u.Username == username)?.Id)
             {
-                
+                try
+                {
+                    if (System.IO.File.Exists(fileModel.Path))
+                    {
+                        response.Content = new StreamContent(new FileStream(fileModel.Path, FileMode.Open, FileAccess.Read));
+                        response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
+                        response.Content.Headers.ContentDisposition.FileName = fileModel.Name;
+                        response.Content.Headers.ContentType = new MediaTypeHeaderValue(fileModel.Type);
+
+                        return response;
+                    }
+                    else
+                    {
+                        
+                        response.StatusCode = System.Net.HttpStatusCode.NoContent;
+                        return response;
+                    }
+                }
+                catch(Exception ex)
+                {
+                    response.StatusCode = System.Net.HttpStatusCode.InternalServerError;
+                    return response;
+                }
             }
             else
             {
-                await HttpContext.Response.WriteAsJsonAsync(new { error = "noteNotFound" });
+                response.StatusCode = System.Net.HttpStatusCode.BadRequest;
+                return response;
             }
         }
 
@@ -119,7 +145,7 @@ namespace MyNotesApplication.Controllers
             }
             else
             {
-                await HttpContext.Response.WriteAsJsonAsync(new { error = "noteNotFound" });
+                HttpContext.Response.StatusCode = 400;
             }
         }
 
