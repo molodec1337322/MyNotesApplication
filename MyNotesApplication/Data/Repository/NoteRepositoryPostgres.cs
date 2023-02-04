@@ -15,32 +15,26 @@ namespace MyNotesApplication.Data.Repository
 
         public Note Add(Note entity)
         {
-            throw new NotImplementedException();
+            _myDBContext.Notes.Add(entity);
+            return entity;
         }
 
         public bool Delete(Note entity)
         {
-            throw new NotImplementedException();
+            _myDBContext.Notes.Remove(entity);
+            return true;
         }
 
-        public Note Get(int id)
-        {
-            return _myDBContext.Notes.FirstOrDefault(n => n.Id == id);
-        }
+        public Note Get(int id) => _myDBContext.Notes.FirstOrDefault(n => n.Id == id);
 
-        public List<Note> GetAll()
-        {
-            throw new NotImplementedException();
-        }
+        public IEnumerable<Note> GetAll() => _myDBContext.Notes.ToList();
 
-        public async Task<int> SaveChanges()
-        {
-            return _myDBContext.SaveChanges();
-        }
+        public async Task<int> SaveChanges() => await _myDBContext.SaveChangesAsync();
 
         public Note Update(Note entity)
         {
-            throw new NotImplementedException();
+            _myDBContext.Notes.Update(entity);
+            return entity;
         }
     }
 }

@@ -27,15 +27,9 @@ namespace MyNotesApplication.Data.Repository
 
         public User Get(int id) => _myDBContext.Users.Find(id);
 
-        public List<User> GetAll()
-        {
-            return _myDBContext.Users.ToList();
-        }
+        public IEnumerable<User> GetAll() => _myDBContext.Users.ToList();
 
-        public async Task<int> SaveChanges()
-        {
-            return _myDBContext.SaveChanges();
-        }
+        public async Task<int> SaveChanges() => await _myDBContext.SaveChangesAsync();
 
         public User Update(User entity)
         {

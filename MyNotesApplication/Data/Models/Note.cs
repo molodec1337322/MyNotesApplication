@@ -15,5 +15,6 @@
         public DateTime DateDone { get; set; }
         public int UserId { get; set; }
         public User User { get; set; }
+        public IEnumerable<FileModel> Files { get; set; }
     }
 }

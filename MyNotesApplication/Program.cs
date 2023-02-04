@@ -20,9 +20,11 @@ builder.Services.AddSession();
 builder.Services.AddControllers();
 
 builder.Services.AddDbContext<MyDBContext>(options => options.UseNpgsql(_DBconfigString.GetConnectionString("PostgreSQLConnection")));
+
 builder.Services.AddScoped<IRepository<Note>, NoteRepositoryPostgres>();
 builder.Services.AddScoped<IRepository<User>, UserRepositoryPostgres>();
 builder.Services.AddScoped<IRepository<ConfirmationToken>, ConfirmationTokenPostgres>();
+builder.Services.AddScoped<IRepository<FileModel>, FileModelRepositoryPostgres>();
 
 builder.Services.AddScoped<EmailService>();
 

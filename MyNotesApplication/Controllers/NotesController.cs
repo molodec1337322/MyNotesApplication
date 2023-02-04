@@ -20,28 +20,43 @@ namespace MyNotesApplication.Controllers
 
         [HttpGet]
         [Authorize]
-        public string Test()
-        {
-            var res = _noteRepository.Get(0);
-            return res == null? "ok" : res.ToString();
-        }
-
-        [HttpGet]
-        [Authorize]
-        public async void AllNotes()
+        [Route("")]
+        public async Task<IActionResult> AllNotes()
         {
             HttpContext.Request.Headers.TryGetValue("Authorization", out var username);
             username.ToString();
 
             User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
+            await HttpContext.Response.WriteAsJsonAsync(_noteRepository.GetAll().Where(n => n.UserId == user.Id));
 
-            if(user != null)
+            return Ok();
+        }
+
+        [HttpGet]
+        [Authorize]
+        [Route("/{NoteId}")]
+        public async Task<IActionResult> GetNote(int NoteId)
+        {
+            HttpContext.Request.Headers.TryGetValue("Authorization", out var username);
+            username.ToString();
+
+            User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
+            Note? note = _noteRepository.Get(NoteId);
+            if(note != null)
             {
-                await HttpContext.Response.WriteAsJsonAsync( new {message = "ok" });
+                if(note.UserId == user.Id)
+                {
+                    await HttpContext.Response.WriteAsJsonAsync(_noteRepository.Get(NoteId));
+                    return Ok();
+                }
+                else
+                {
+                    return BadRequest();
+                }
             }
             else
             {
-                await HttpContext.Response.WriteAsJsonAsync(new { error = "notFound" });
+                return BadRequest();
             }
         }
         

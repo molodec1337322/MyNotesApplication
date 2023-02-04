@@ -27,15 +27,9 @@ namespace MyNotesApplication.Data.Repository
 
         public ConfirmationToken Get(int id) => _myDBContext.ConfirmationTokens.Find(id);
 
-        public List<ConfirmationToken> GetAll()
-        {
-            return _myDBContext.ConfirmationTokens.ToList();
-        }
+        public IEnumerable<ConfirmationToken> GetAll() => _myDBContext.ConfirmationTokens.ToList();
 
-        public async Task<int> SaveChanges()
-        {
-            return _myDBContext.SaveChanges();
-        }
+        public async Task<int> SaveChanges() => await _myDBContext.SaveChangesAsync();
 
         public ConfirmationToken Update(ConfirmationToken entity)
         {
