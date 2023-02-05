@@ -7,7 +7,7 @@
 -appsettings.json
 -DBConfig.json
 
-###appsettings.json
+### appsettings.json
 ```
 {
   "Logging": {
@@ -24,7 +24,7 @@
 ```
 
 
-###DBConfig.json
+### DBConfig.json
 ```
 {
   "ConnectionStrings": {
