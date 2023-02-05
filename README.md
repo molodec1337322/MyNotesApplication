@@ -6,7 +6,7 @@
 Для корректной сборки проекта в корневом каталоге проекта необходимо создать файлы с указанным содержимым:
 -appsettings.json
 -DBConfig.json
-
+```
 appsettings.json
 {
   "Logging": {
@@ -20,10 +20,13 @@ appsettings.json
   "HostPassword": "Пароль от почты здесь",
   "FilesStorageFolder":  "Files"
 }
+```
 
+```
 DBConfig.json
 {
   "ConnectionStrings": {
     "PostgreSQLConnection": "Строка подклбючения к вашей БД"
   }
 }
+```
