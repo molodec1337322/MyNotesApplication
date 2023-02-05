@@ -4,8 +4,8 @@
 + PostgreSQL
 
 Для корректной сборки проекта в корневом каталоге проекта необходимо создать файлы с указанным содержимым:
--appsettings.json
--DBConfig.json
++ appsettings.json
++ DBConfig.json
 
 ### appsettings.json
 ```
