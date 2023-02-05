@@ -31,7 +31,7 @@ namespace MyNotesApplication.Controllers
         /// </summary>
         [HttpPost]
         [Route("Login")]
-        public async Task Login()
+        public async Task<IActionResult> Login()
         {
             try
             {
@@ -55,24 +55,22 @@ namespace MyNotesApplication.Controllers
                                 expires: DateTime.UtcNow.Add(TimeSpan.FromHours(12)),
                                 signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
 
-
-                        await HttpContext.Response.WriteAsJsonAsync(new { Token = "Bearer " + new JwtSecurityTokenHandler().WriteToken(jwt) });
+                        return Ok(new { Token = "Bearer " + new JwtSecurityTokenHandler().WriteToken(jwt) });
                     }
                     else
                     {
-                        await HttpContext.Response.WriteAsJsonAsync(new { message = "userNotFound" });
+                        return NotFound(new { message = "wrong password" });
                     }
-                     
                 }
                 else
                 {
-                    await HttpContext.Response.WriteAsJsonAsync(new { message = "userNotFound"});
-                }
-                
+                    return NotFound(new { message = "user not exist" });
+                }          
             }
             catch (Exception ex)
             {
-                await HttpContext.Response.WriteAsJsonAsync(new { message="error", exception=ex.Message});
+                Console.WriteLine(ex.ToString());
+                return BadRequest();
             }
         }
 
@@ -88,7 +86,7 @@ namespace MyNotesApplication.Controllers
         /// </summary>
         [HttpPost]
         [Route("Registration")]
-        public async Task Register()
+        public async Task<IActionResult> Register()
         {
             try
             {
@@ -126,24 +124,23 @@ namespace MyNotesApplication.Controllers
                     var confirmationUrl = Url.Action("EmailConfirm", "Auth", new { confirmationGuidUrl = createdToken.ConfirmationGUID }, protocol: HttpContext.Request.Scheme);
                     await emailService.SendEmailAsync(newUser.Email, "Подтвердите свою почту", $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confirmationUrl}'>Подтвердить</a>");
 
-                    await HttpContext.Response.WriteAsJsonAsync(new { message = "userConfirmEmail" });
+                    return Ok(new { message ="confirm email"});
                 }
                 else
                 {
-                    await HttpContext.Response.WriteAsJsonAsync(new { message = "userAlreadyExists" });   
+                    return StatusCode(409);
                 }
-
             }
             catch (Exception ex)
             {
                 Console.Write(ex.ToString());
-                await HttpContext.Response.WriteAsJsonAsync(new { message = "error", exception = ex.Message });
+                return StatusCode(500);
             }
         }
 
         [HttpGet]
         [Route("EmailConfirm/{confirmationGuidUrl}")]
-        public async Task EmailConfirm(string confirmationGuidUrl)
+        public async Task<IActionResult> EmailConfirm(string confirmationGuidUrl)
         {
             ConfirmationToken? token = _confirmationTokenRepository.GetAll().FirstOrDefault(token => token.ConfirmationGUID == confirmationGuidUrl && token.ExpiredDate > DateTime.Now);
             if(token != null)
@@ -156,11 +153,11 @@ namespace MyNotesApplication.Controllers
                 _userRepository.Update(user);
                 await _userRepository.SaveChanges();
 
-                await HttpContext.Response.WriteAsync("confirmed");
+                return Ok();
             }
             else
             {
-                await HttpContext.Response.WriteAsync("confirmError");
+                return BadRequest();
             }
         }
 

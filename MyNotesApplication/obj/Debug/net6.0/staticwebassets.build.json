@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "3XoJAnXQVrvgoXIRRUqbQwyo7u3gUiVwH6OQJyGijYQ=",
+  "Hash": "nR06R31mIUOjx9RdD7CL3bcbBvxENHQYnhCmknNXQQw=",
   "Source": "MyNotesApplication",
   "BasePath": "_content/MyNotesApplication",
   "Mode": "Default",
@@ -17,12 +17,12 @@
   ],
   "Assets": [
     {
-      "Identity": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\Files\\agvq3rzk.jpeg",
+      "Identity": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\Files\\4yvccypq.jpeg",
       "SourceId": "MyNotesApplication",
       "SourceType": "Discovered",
       "ContentRoot": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\",
       "BasePath": "_content/MyNotesApplication",
-      "RelativePath": "Files/agvq3rzk.jpeg",
+      "RelativePath": "Files/4yvccypq.jpeg",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -31,41 +31,7 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\Files\\agvq3rzk.jpeg"
-    },
-    {
-      "Identity": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\Files\\hokwwyjp.jpeg",
-      "SourceId": "MyNotesApplication",
-      "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\",
-      "BasePath": "_content/MyNotesApplication",
-      "RelativePath": "Files/hokwwyjp.jpeg",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\Files\\hokwwyjp.jpeg"
-    },
-    {
-      "Identity": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\Files\\wxboxdm1.jpeg",
-      "SourceId": "MyNotesApplication",
-      "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\",
-      "BasePath": "_content/MyNotesApplication",
-      "RelativePath": "Files/wxboxdm1.jpeg",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\Files\\wxboxdm1.jpeg"
+      "OriginalItemSpec": "wwwroot\\Files\\4yvccypq.jpeg"
     }
   ]
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MyNotesApplication.Data.Interfaces;
@@ -32,11 +33,11 @@ namespace MyNotesApplication.Controllers
         [HttpPost]
         [Authorize]
         [Route("Upload/{NoteId}")]
-        public async Task UploadFile(List<IFormFile> files, int NoteId)
+        public async Task<IActionResult> UploadFile(List<IFormFile> files, int NoteId)
         {
             var username = GetUsernameFromJwtToken();
 
-            if (_notesRepository.Get(NoteId)?.UserId == _userRepository.GetAll().FirstOrDefault(u => u.Username == username)?.Id)
+            if (_notesRepository.Get(NoteId).UserId == _userRepository.GetAll().FirstOrDefault(u => u.Username == username).Id)
             {
                 try
                 {
@@ -73,79 +74,89 @@ namespace MyNotesApplication.Controllers
                     }
                     await _fileModelRepository.SaveChanges();
 
-                    HttpContext.Response.StatusCode = 200;
+                    return Ok();
                 }
                 catch (Exception ex)
                 {
                     Console.Write(ex.Message);
-                    HttpContext.Response.StatusCode = 500;
+                    return StatusCode(500);
                 }
             }
             else
             {
-                HttpContext.Response.StatusCode = 400;
+                return BadRequest();
             }
         }
 
         [HttpGet]
         [Authorize]
         [Route("Download/{FileId}")]
-        public async Task<HttpResponseMessage> DownloadFile(int FileId)
+        public async Task<IActionResult> DownloadFile(int FileId)
         {
             var username = GetUsernameFromJwtToken();
 
             FileModel fileModel = _fileModelRepository.Get(FileId);
-            HttpResponseMessage response = new HttpResponseMessage();
-
-            if (_notesRepository.Get(fileModel.NoteId)?.UserId == _userRepository.GetAll().FirstOrDefault(u => u.Username == username)?.Id)
+            if(fileModel != null && _notesRepository.Get(fileModel.NoteId).UserId == _userRepository.GetAll().FirstOrDefault(u => u.Username == username).Id)
             {
                 try
                 {
                     if (System.IO.File.Exists(fileModel.Path))
                     {
-                        response.Content = new StreamContent(new FileStream(fileModel.Path, FileMode.Open, FileAccess.Read));
-                        response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
-                        response.Content.Headers.ContentDisposition.FileName = fileModel.Name;
-                        response.Content.Headers.ContentType = new MediaTypeHeaderValue(fileModel.Type);
+                        string filePath = fileModel.Path;
 
-                        return response;
+                        return PhysicalFile(fileModel.Path, fileModel.Type);
                     }
                     else
                     {
-                        
-                        response.StatusCode = System.Net.HttpStatusCode.NoContent;
-                        return response;
+                        return NoContent();
                     }
                 }
                 catch(Exception ex)
                 {
-                    response.StatusCode = System.Net.HttpStatusCode.InternalServerError;
-                    return response;
+                    Console.Write(ex.Message);
+                    return StatusCode(500);
                 }
             }
             else
             {
-                response.StatusCode = System.Net.HttpStatusCode.BadRequest;
-                return response;
+                return BadRequest();
             }
         }
 
         [HttpDelete]
         [Authorize]
         [Route("Delete/{FileId}")]
-        public async Task DeleteFile(int FileId)
+        public async Task<IActionResult> DeleteFile(int FileId)
         {
             var username = GetUsernameFromJwtToken();
 
             FileModel fileModel = _fileModelRepository.Get(FileId);
 
-            if (_notesRepository.Get(fileModel.NoteId)?.UserId == _userRepository.GetAll().FirstOrDefault(u => u.Username == username)?.Id)
+            if (fileModel != null && _notesRepository.Get(fileModel.NoteId)?.UserId == _userRepository.GetAll().FirstOrDefault(u => u.Username == username).Id)
             {
-
+                try
+                {
+                    if (System.IO.File.Exists(fileModel.Path))
+                    {
+                        System.IO.File.Delete(fileModel.Path);
+                        _fileModelRepository.Delete(fileModel);
+                        await _notesRepository.SaveChanges();
+                        return Ok();
+                    }
+                    else
+                    {
+                        return NotFound();
+                    }
+                }
+                catch(Exception ex)
+                {
+                    Console.Write(ex.Message);
+                    return StatusCode(500);
+                }
             }
             else
             {
-                HttpContext.Response.StatusCode = 400;
+                return Forbid();
             }
         }
 

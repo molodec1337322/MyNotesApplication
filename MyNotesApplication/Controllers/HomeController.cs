@@ -8,9 +8,9 @@ namespace MyNotesApplication.Controllers
         [Route("")]
         [Route("/Home")]
         [Route("/Home/Index")]
-        public string Index()
+        public IActionResult Index()
         {
-            return "ok";
+            return Ok("Started");
         }
     }
 }

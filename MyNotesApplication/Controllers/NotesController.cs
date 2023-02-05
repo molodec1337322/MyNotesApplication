@@ -26,19 +26,19 @@ namespace MyNotesApplication.Controllers
         [HttpGet]
         [Authorize]
         [Route("")]
-        public async Task AllNotes()
+        public async Task<IActionResult> AllNotes()
         {
             string username = GetUsernameFromJwtToken();
             NoteData? noteData = await HttpContext.Request.ReadFromJsonAsync<NoteData>();
 
             User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
-            await HttpContext.Response.WriteAsJsonAsync(_noteRepository.GetAll().Where(n => n.UserId == user.Id));
+            return Ok(_noteRepository.GetAll().Where(n => n.UserId == user.Id));
         }
 
         [HttpGet]
         [Authorize]
         [Route("Get/{NoteId}")]
-        public async Task GetNote(int NoteId)
+        public async Task<IActionResult> GetNote(int NoteId)
         {
             string username = GetUsernameFromJwtToken();
             NoteData? noteData = await HttpContext.Request.ReadFromJsonAsync<NoteData>();
@@ -49,16 +49,16 @@ namespace MyNotesApplication.Controllers
             {
                 if(note.UserId == user.Id)
                 {
-                    await HttpContext.Response.WriteAsJsonAsync(_noteRepository.Get(NoteId));
+                    return Ok(_noteRepository.Get(NoteId));
                 }
                 else
                 {
-                    await HttpContext.Response.WriteAsJsonAsync(new { message = "notFound" });
+                    return Forbid();
                 }
             }
             else
             {
-                await HttpContext.Response.WriteAsJsonAsync(new { message = "notFound" });
+                return NotFound();
             }
         }
 
@@ -70,7 +70,7 @@ namespace MyNotesApplication.Controllers
         [HttpPost]
         [Authorize]
         [Route("Add")]
-        public async Task AddNote()
+        public async Task<IActionResult> AddNote()
         {
             string username = GetUsernameFromJwtToken();
             NoteData? noteData = await HttpContext.Request.ReadFromJsonAsync<NoteData>();
@@ -88,18 +88,18 @@ namespace MyNotesApplication.Controllers
                 Note note = _noteRepository.Add(newNote);
                 await _noteRepository.SaveChanges();
 
-                await HttpContext.Response.WriteAsJsonAsync(newNote);
+                return Ok(newNote);
             }
             else
             {
-                await HttpContext.Response.WriteAsJsonAsync(new { message = "error"});
+                return NotFound();
             }
         }
 
         [HttpPut]
         [Authorize]
         [Route("Update/{NoteId}")]
-        public async Task UpdateNote(int NoteId)
+        public async Task<IActionResult> UpdateNote(int NoteId)
         {
             string username = GetUsernameFromJwtToken();
             NoteData? updatedNoteData = await HttpContext.Request.ReadFromJsonAsync<NoteData>();
@@ -117,23 +117,23 @@ namespace MyNotesApplication.Controllers
                     Note updatedNote = _noteRepository.Update(note);
                     await _noteRepository.SaveChanges();
 
-                    await HttpContext.Response.WriteAsJsonAsync(updatedNote);
+                    return Ok(updatedNote);
                 }
                 else
                 {
-                    await HttpContext.Response.WriteAsJsonAsync(new { message = "notFound" });
+                    return Forbid();
                 }
             }
             else
             {
-                await HttpContext.Response.WriteAsJsonAsync(new { message = "notFound" });
+                return NotFound();
             }
         }
 
         [HttpPut]
         [Authorize]
         [Route("Done/{NoteId}")]
-        public async Task MarkNoteDone(int NoteId)
+        public async Task<IActionResult> MarkNoteDone(int NoteId)
         {
             string username = GetUsernameFromJwtToken();
 
@@ -149,23 +149,23 @@ namespace MyNotesApplication.Controllers
                     Note doneNote = _noteRepository.Update(note);
                     await _noteRepository.SaveChanges();
 
-                    await HttpContext.Response.WriteAsJsonAsync(doneNote);
+                    return Ok(doneNote);
                 }
                 else
                 {
-                    await HttpContext.Response.WriteAsJsonAsync(new { message = "notFound" });
+                    return Forbid();
                 }
             }
             else
             {
-                await HttpContext.Response.WriteAsJsonAsync(new { message = "notFound" });
+                return NotFound();
             }
         }
 
         [HttpDelete]
         [Authorize]
         [Route("Delete/{NoteId}")]
-        public async Task DeleteNote(int NoteId)
+        public async Task<IActionResult> DeleteNote(int NoteId)
         {
             string username = GetUsernameFromJwtToken();
             NoteData? updatedNoteData = await HttpContext.Request.ReadFromJsonAsync<NoteData>();
@@ -179,16 +179,17 @@ namespace MyNotesApplication.Controllers
                     _noteRepository.Delete(note);
                     await _noteRepository.SaveChanges();
 
-                    await HttpContext.Response.WriteAsJsonAsync(new { message = "deleted"});
+                    return Ok(new { message = "deleted", NoteId = NoteId });
                 }
                 else
                 {
                     await HttpContext.Response.WriteAsJsonAsync(new { message = "notFound" });
+                    return Forbid();
                 }
             }
             else
             {
-                await HttpContext.Response.WriteAsJsonAsync(new { message = "notFound" });
+                return NotFound();
             }
         }
         
