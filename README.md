@@ -6,8 +6,9 @@
 Для корректной сборки проекта в корневом каталоге проекта необходимо создать файлы с указанным содержимым:
 -appsettings.json
 -DBConfig.json
+
+###appsettings.json
 ```
-appsettings.json
 {
   "Logging": {
     "LogLevel": {
@@ -22,8 +23,9 @@ appsettings.json
 }
 ```
 
+
+###DBConfig.json
 ```
-DBConfig.json
 {
   "ConnectionStrings": {
     "PostgreSQLConnection": "Строка подклбючения к вашей БД"
