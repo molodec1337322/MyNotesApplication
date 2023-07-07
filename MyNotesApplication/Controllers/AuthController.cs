@@ -17,12 +17,14 @@ namespace MyNotesApplication.Controllers
         private readonly IRepository<User> _userRepository;
         private readonly IRepository<ConfirmationToken> _confirmationTokenRepository;
         private readonly IConfiguration _appConfiguration;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IRepository<User> userRepo, IRepository<ConfirmationToken> confirmationTokenRepo, IConfiguration appConfiguration)
+        public AuthController(IRepository<User> userRepo, IRepository<ConfirmationToken> confirmationTokenRepo, IConfiguration appConfiguration, ILogger<AuthController> logger)
         {
             _userRepository = userRepo;
             _confirmationTokenRepository = confirmationTokenRepo;
             _appConfiguration = appConfiguration;
+            _logger = logger;
         }
 
         /// <summary>
@@ -69,15 +71,24 @@ namespace MyNotesApplication.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                _logger.LogError(ex.ToString());
                 return BadRequest();
             }
         }
 
         [HttpPost]
         [Route("Logout")]
-        public async Task Logout() 
+        public async Task<IActionResult> Logout() 
         {
+            try
+            {
+                return Ok();
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.ToString());
+                return BadRequest();
+            }
         }
 
         /// <summary>
@@ -133,7 +144,7 @@ namespace MyNotesApplication.Controllers
             }
             catch (Exception ex)
             {
-                Console.Write(ex.ToString());
+                _logger.LogError(ex.ToString());
                 return StatusCode(500);
             }
         }

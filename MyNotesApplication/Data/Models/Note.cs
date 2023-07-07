@@ -15,6 +15,7 @@
 
         public DateTime DateDone { get; set; }
         public int UserId { get; set; }
+
         [System.Text.Json.Serialization.JsonIgnore]
         public User User { get; set; }
         public IEnumerable<FileModel> Files { get; set; }

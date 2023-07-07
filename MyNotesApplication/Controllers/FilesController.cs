@@ -19,15 +19,17 @@ namespace MyNotesApplication.Controllers
         private readonly IRepository<User> _userRepository;
         private readonly IWebHostEnvironment _appEnviroment;
         private readonly IConfiguration _appConfiguration;
+        private readonly ILogger<FilesController> _logger;
 
         
-        public FilesController(IRepository<FileModel> fileModelRepo, IRepository<Note> notesRepo, IRepository<User> userRepo,IWebHostEnvironment appEnviroment, IConfiguration appConfiguration)
+        public FilesController(IRepository<FileModel> fileModelRepo, IRepository<Note> notesRepo, IRepository<User> userRepo,IWebHostEnvironment appEnviroment, IConfiguration appConfiguration, ILogger<FilesController> logger)
         {
             _fileModelRepository = fileModelRepo;
             _notesRepository = notesRepo;
             _userRepository = userRepo;
             _appEnviroment = appEnviroment;
             _appConfiguration = appConfiguration;
+            _logger = logger;
         }
 
         [HttpPost]
@@ -78,7 +80,7 @@ namespace MyNotesApplication.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Console.Write(ex.Message);
+                    _logger.LogError(ex.ToString());
                     return StatusCode(500);
                 }
             }
@@ -113,7 +115,7 @@ namespace MyNotesApplication.Controllers
                 }
                 catch(Exception ex)
                 {
-                    Console.Write(ex.Message);
+                    _logger.LogError(ex.ToString());
                     return StatusCode(500);
                 }
             }
@@ -150,7 +152,7 @@ namespace MyNotesApplication.Controllers
                 }
                 catch(Exception ex)
                 {
-                    Console.Write(ex.Message);
+                    _logger.LogError(ex.ToString());
                     return StatusCode(500);
                 }
             }

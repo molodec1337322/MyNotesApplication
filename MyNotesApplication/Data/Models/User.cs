@@ -12,6 +12,7 @@ namespace MyNotesApplication.Data.Models
         public string Password { get; set; }
         public bool EmailConfirmed { get; set; }
         public IEnumerable<Note> Notes { get; set; }
+
         public ConfirmationToken ConfirmationToken { get; set; }
     }
 }
