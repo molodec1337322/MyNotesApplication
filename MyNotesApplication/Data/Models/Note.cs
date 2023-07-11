@@ -27,7 +27,7 @@
     public enum NoteType
     {
         ToDo,
-        GetInWork,
+        GotInWork,
         InProgress,
         Done
     }
