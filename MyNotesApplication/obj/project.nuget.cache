@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "3KqGy9B+HR1xtCgsFzwKqTgQXcmLoGuEEsFy0+Naw0M8TDNWXgKpPeTDFtCKKn8LPjM0XuWNaIzIvNVXpxrXPw==",
+  "dgSpecHash": "TiTReHBuo+J8U8Gw2M0ZMZ2GfDJkWNc95vlbMadrhse2Dbrej4tJ73Xc6Swx1d53oQux/D/64kOyXfvqgg9q2A==",
   "success": true,
   "projectFilePath": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\MyNotesApplication.csproj",
   "expectedPackageFiles": [
@@ -9,6 +9,7 @@
     "C:\\Users\\Molodec\\.nuget\\packages\\microsoft.aspnet.mvc\\5.2.9\\microsoft.aspnet.mvc.5.2.9.nupkg.sha512",
     "C:\\Users\\Molodec\\.nuget\\packages\\microsoft.aspnet.razor\\3.2.9\\microsoft.aspnet.razor.3.2.9.nupkg.sha512",
     "C:\\Users\\Molodec\\.nuget\\packages\\microsoft.aspnet.webpages\\3.2.9\\microsoft.aspnet.webpages.3.2.9.nupkg.sha512",
+    "C:\\Users\\Molodec\\.nuget\\packages\\microsoft.aspnetcore.authentication.google\\6.0.19\\microsoft.aspnetcore.authentication.google.6.0.19.nupkg.sha512",
     "C:\\Users\\Molodec\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\6.0.13\\microsoft.aspnetcore.authentication.jwtbearer.6.0.13.nupkg.sha512",
     "C:\\Users\\Molodec\\.nuget\\packages\\microsoft.csharp\\4.5.0\\microsoft.csharp.4.5.0.nupkg.sha512",
     "C:\\Users\\Molodec\\.nuget\\packages\\microsoft.entityframeworkcore\\7.0.2\\microsoft.entityframeworkcore.7.0.2.nupkg.sha512",

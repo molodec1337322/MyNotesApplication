@@ -63,7 +63,7 @@ namespace MyNotesApplication.Controllers
         }
 
         /// <summary>
-        /// Req {"Name" = "Note1", "Text" = "Note Text", "PathToFile": "pathToFile/Null"}
+        /// Req {"Name" = "Note1", "Text" = "Note Text", "PathToFile": "pathToFile/Null", "OrderInToDo": 1}
         /// Res {"message" = "ok"}
         /// </summary>
         /// <returns></returns>
@@ -83,6 +83,10 @@ namespace MyNotesApplication.Controllers
                 newNote.Text = noteData.Text;
                 newNote.Name = noteData.Name;
                 newNote.CreatedDate = DateTime.UtcNow;
+                newNote.Type = NoteType.ToDo.ToString();
+                int orderNumber;
+                Int32.TryParse(noteData.OrderInToDo, out orderNumber);
+                newNote.OrderPlace = orderNumber;
                 newNote.UserId = user.Id;
 
                 Note note = _noteRepository.Add(newNote);
@@ -193,7 +197,7 @@ namespace MyNotesApplication.Controllers
             }
         }
         
-        public record NoteData(string Name, string Text, string PathToFile);
+        public record NoteData(string Name, string Text, string PathToFile, string OrderInToDo);
 
         private string GetUsernameFromJwtToken()
         {
