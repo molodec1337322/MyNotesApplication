@@ -45,10 +45,10 @@ namespace MyNotesApplication.Controllers
 
                 User? user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email);
 
-                if(user == null || !user.EmailConfirmed) return NotFound(new { message = "user not exist" });
+                if(user == null || !user.EmailConfirmed) return NotFound();
 
                 PasswordHasher<User> ph = new PasswordHasher<User>();
-                if (ph.VerifyHashedPassword(user, user.Password, password) != PasswordVerificationResult.Success) return NotFound(new { message = "wrong password" });
+                if (ph.VerifyHashedPassword(user, user.Password, password) != PasswordVerificationResult.Success) return NotFound();
 
                 var claims = new List<Claim> { new Claim(ClaimTypes.Name, user.Username) };
                 var jwt = new JwtSecurityToken(

@@ -41,6 +41,13 @@ namespace MyNotesApplication.Controllers
         }
 
         [HttpGet]
+        [Route("GetLimit")]
+        public async Task<IActionResult> GetNotesLimit()
+        {
+            return Ok(new {limit = _appConfiguration.GetValue<int>("NotesPerUser") });
+        }
+
+        [HttpGet]
         [Authorize]
         [Route("Get/{NoteId}")]
         public async Task<IActionResult> GetNote(int NoteId)
@@ -74,6 +81,8 @@ namespace MyNotesApplication.Controllers
             User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
 
             if(noteData == null) return NoContent();
+
+            if (_noteRepository.GetAll().Where(note => note.UserId == user.Id).ToList().Count >= _appConfiguration.GetValue<int>("NotesLimitPerUser")) return Forbid();
 
             Note newNote = new Note();
             newNote.Text = noteData.Text;
