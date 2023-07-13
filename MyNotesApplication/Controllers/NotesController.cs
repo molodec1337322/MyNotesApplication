@@ -15,8 +15,9 @@ namespace MyNotesApplication.Controllers
         private readonly IRepository<Note> _noteRepository;
         private readonly IRepository<User> _userRepository;
         private readonly IConfiguration _appConfiguration;
+        private readonly ILogger<AuthController> _logger;
 
-        public NotesController(IRepository<Note> noteRepo, IRepository<User> userRepo, IConfiguration appConfiguration)
+        public NotesController(IRepository<Note> noteRepo, IRepository<User> userRepo, IConfiguration appConfiguration, ILogger<AuthController> logger)
         {
             _noteRepository = noteRepo;
             _userRepository = userRepo;
@@ -32,7 +33,11 @@ namespace MyNotesApplication.Controllers
             NoteData? noteData = await HttpContext.Request.ReadFromJsonAsync<NoteData>();
 
             User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
+
+            if (user == null) return Forbid();
+
             return Ok(_noteRepository.GetAll().Where(n => n.UserId == user.Id));
+            
         }
 
         [HttpGet]
@@ -45,25 +50,16 @@ namespace MyNotesApplication.Controllers
 
             User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
             Note? note = _noteRepository.Get(NoteId);
-            if(note != null)
-            {
-                if(note.UserId == user.Id)
-                {
-                    return Ok(_noteRepository.Get(NoteId));
-                }
-                else
-                {
-                    return Forbid();
-                }
-            }
-            else
-            {
-                return NotFound();
-            }
+
+            if(note == null) return NotFound();
+
+            if (note.UserId != user.Id) return Forbid();
+
+            return Ok(_noteRepository.Get(NoteId));
         }
 
         /// <summary>
-        /// Req {"Name" = "Note1", "Text" = "Note Text", "PathToFile": "pathToFile/Null", "OrderInToDo": 1}
+        /// Req {"Name" = "Note1", "Text" = "Note Text", "PathToFile": "pathToFile/Null", Type: "ToDo", "order": 1}
         /// Res {"message" = "ok"}
         /// </summary>
         /// <returns></returns>
@@ -77,27 +73,20 @@ namespace MyNotesApplication.Controllers
 
             User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
 
-            if(noteData != null)
-            {       
-                Note newNote = new Note();
-                newNote.Text = noteData.Text;
-                newNote.Name = noteData.Name;
-                newNote.CreatedDate = DateTime.UtcNow;
-                newNote.Type = NoteType.ToDo.ToString();
-                int orderNumber;
-                Int32.TryParse(noteData.OrderInToDo, out orderNumber);
-                newNote.OrderPlace = orderNumber;
-                newNote.UserId = user.Id;
+            if(noteData == null) return NoContent();
 
-                Note note = _noteRepository.Add(newNote);
-                await _noteRepository.SaveChanges();
+            Note newNote = new Note();
+            newNote.Text = noteData.Text;
+            newNote.Name = noteData.Name;
+            newNote.CreatedDate = DateTime.UtcNow;
+            newNote.Type = noteData.Type;
+            newNote.OrderPlace = noteData.order;
+            newNote.UserId = user.Id;
 
-                return Ok(newNote);
-            }
-            else
-            {
-                return NoContent();
-            }
+            Note note = _noteRepository.Add(newNote);
+            await _noteRepository.SaveChanges();
+
+            return Ok(newNote);
         }
 
         [HttpPut]
@@ -110,37 +99,65 @@ namespace MyNotesApplication.Controllers
 
             User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
             Note? note = _noteRepository.Get(NoteId);
-            if (note != null)
-            {
-                if (note.UserId == user.Id)
-                {
-                    note.Name = updatedNoteData.Name;
-                    note.Text = updatedNoteData.Text;
-                    note.ChangedDate = DateTime.UtcNow;
 
-                    Note updatedNote = _noteRepository.Update(note);
-                    await _noteRepository.SaveChanges();
+            if(note == null) return NoContent();
 
-                    return Ok();
-                }
-                else
-                {
-                    return Forbid();
-                }
-            }
-            else
-            {
-                return NoContent();
-            }
+            if(updatedNoteData == null) return NotFound();
+
+            if (note.UserId != user.Id) return Forbid();
+
+            note.Name = updatedNoteData.Name;
+            note.Text = updatedNoteData.Text;
+            note.ChangedDate = DateTime.UtcNow;
+
+            Note updatedNote = _noteRepository.Update(note);
+            await _noteRepository.SaveChanges();
+
+            return Ok();
         }
 
+        /// <summary>
+        /// Req {"Name" = "Note1", "Text" = "Note Text", "PathToFile": "pathToFile/Null", "order": 1}
+        /// Res {"message" = "ok"}
+        /// </summary>
+        /// <returns></returns>
         [HttpPut]
         [Authorize]
         [Route("Update")]
         public async Task<IActionResult> UpdateNotes()
         {
             string username = GetUsernameFromJwtToken();
-            NotesData? notes = await HttpContext.Request.ReadFromJsonAsync<NotesData>();
+            User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
+
+            NotesData? notesData = await HttpContext.Request.ReadFromJsonAsync<NotesData>();
+            List<int> noteIds = new List<int>();
+            int noteId;
+
+            if (notesData == null) return NoContent();
+
+            foreach(var item in notesData.notesList)
+            {
+                noteIds.Add(item.id);
+            }
+
+            List<Note> notes = _noteRepository.GetAll().Where(item => noteIds.Contains(item.Id)).ToList();
+
+            foreach(var note in notes){
+                if(note.UserId != user.Id)
+                {
+                    return Forbid();
+                }
+            }
+
+            foreach(var note in notes)
+            {
+                var newNote = notesData.notesList.First(item => note.Id == item.id);
+                note.OrderPlace = newNote.order;
+                note.Type = newNote.Type;
+                _noteRepository.Update(note);
+            }
+
+            await _noteRepository.SaveChanges();
 
             return Ok();
         }
@@ -154,27 +171,18 @@ namespace MyNotesApplication.Controllers
 
             User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
             Note? note = _noteRepository.Get(NoteId);
-            if (note != null)
-            {
-                if (note.UserId == user.Id)
-                {
-                    note.IsDone = true;
-                    note.DateDone = DateTime.UtcNow;
 
-                    Note doneNote = _noteRepository.Update(note);
-                    await _noteRepository.SaveChanges();
+            if(note == null) return NoContent();
 
-                    return Ok(doneNote);
-                }
-                else
-                {
-                    return Forbid();
-                }
-            }
-            else
-            {
-                return NoContent();
-            }
+            if(note.UserId != user.Id) return Forbid();
+
+            note.IsDone = true;
+            note.DateDone = DateTime.UtcNow;
+
+            Note doneNote = _noteRepository.Update(note);
+            await _noteRepository.SaveChanges();
+
+            return Ok(doneNote);
         }
 
         [HttpDelete]
@@ -187,28 +195,19 @@ namespace MyNotesApplication.Controllers
 
             User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
             Note? note = _noteRepository.Get(NoteId);
-            if (note != null)
-            {
-                if (note.UserId == user.Id)
-                {
-                    _noteRepository.Delete(note);
-                    await _noteRepository.SaveChanges();
 
-                    return Ok(new { message = "deleted", NoteId = NoteId });
-                }
-                else
-                {
-                    return Forbid();
-                }
-            }
-            else
-            {
-                return NoContent();
-            }
+            if(note == null) return NoContent();
+
+            if (note.UserId != user.Id) return Forbid();
+
+            _noteRepository.Delete(note);
+            await _noteRepository.SaveChanges();
+
+            return Ok(new { message = "deleted", NoteId = NoteId });
         }
         
-        public record NoteData(string Name, string Text, string PathToFile, string OrderInToDo);
-        public record NotesData(IEnumerable<NoteData> notes);
+        public record NoteData(int id, string Name, string Text, string PathToFile, string Type, int order);
+        public record NotesData(IEnumerable<NoteData> notesList);
 
         private string GetUsernameFromJwtToken()
         {

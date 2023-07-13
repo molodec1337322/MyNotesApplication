@@ -45,30 +45,20 @@ namespace MyNotesApplication.Controllers
 
                 User? user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email);
 
-                if (user != null && user.EmailConfirmed)
-                {
-                    PasswordHasher<User> ph = new PasswordHasher<User>();
-                    if(ph.VerifyHashedPassword(user, user.Password, password) == PasswordVerificationResult.Success)
-                    {
-                        var claims = new List<Claim> { new Claim(ClaimTypes.Name, user.Username) };
-                        var jwt = new JwtSecurityToken(
-                                issuer: AuthOptions.ISSUER,
-                                audience: AuthOptions.AUDIENCE,
-                                claims: claims,
-                                expires: DateTime.UtcNow.Add(TimeSpan.FromHours(12)),
-                                signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
+                if(user == null || !user.EmailConfirmed) return NotFound(new { message = "user not exist" });
 
-                        return Ok(new { Token = "Bearer " + new JwtSecurityTokenHandler().WriteToken(jwt) });
-                    }
-                    else
-                    {
-                        return NotFound(new { message = "wrong password" });
-                    }
-                }
-                else
-                {
-                    return NotFound(new { message = "user not exist" });
-                }          
+                PasswordHasher<User> ph = new PasswordHasher<User>();
+                if (ph.VerifyHashedPassword(user, user.Password, password) != PasswordVerificationResult.Success) return NotFound(new { message = "wrong password" });
+
+                var claims = new List<Claim> { new Claim(ClaimTypes.Name, user.Username) };
+                var jwt = new JwtSecurityToken(
+                        issuer: AuthOptions.ISSUER,
+                        audience: AuthOptions.AUDIENCE,
+                        claims: claims,
+                        expires: DateTime.UtcNow.Add(TimeSpan.FromHours(12)),
+                        signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
+
+                return Ok(new { Token = "Bearer " + new JwtSecurityTokenHandler().WriteToken(jwt) });
             }
             catch (Exception ex)
             {
@@ -111,38 +101,33 @@ namespace MyNotesApplication.Controllers
 
                 User? user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email || u.Username == username);
 
-                if (user == null)
-                {
-                    User newUser = new User();
-                    newUser.Email = email;
-                    newUser.Password = password;
-                    newUser.Username = username;
-                    newUser.EmailConfirmed = false;
+                if (user != null) return StatusCode(409);
 
-                    ConfirmationToken newToken= new ConfirmationToken();
-                    newToken.User = newUser;
-                    newToken.CreatedDate = DateTime.UtcNow;
-                    newToken.ExpiredDate = DateTime.UtcNow.AddDays(1);
-                    newToken.ConfirmationGUID = Guid.NewGuid().ToString();
+                User newUser = new User();
+                newUser.Email = email;
+                newUser.Password = password;
+                newUser.Username = username;
+                newUser.EmailConfirmed = false;
 
-                    PasswordHasher<User> ph = new PasswordHasher<User>();
-                    newUser.Password = ph.HashPassword(newUser, password);
+                ConfirmationToken newToken = new ConfirmationToken();
+                newToken.User = newUser;
+                newToken.CreatedDate = DateTime.UtcNow;
+                newToken.ExpiredDate = DateTime.UtcNow.AddDays(1);
+                newToken.ConfirmationGUID = Guid.NewGuid().ToString();
 
-                    User createdUser = _userRepository.Add(newUser);
-                    await _userRepository.SaveChanges();
-                    ConfirmationToken createdToken = _confirmationTokenRepository.Add(newToken);
-                    await _confirmationTokenRepository.SaveChanges();
+                PasswordHasher<User> ph = new PasswordHasher<User>();
+                newUser.Password = ph.HashPassword(newUser, password);
 
-                    var emailService = new EmailService(_appConfiguration);
-                    var confirmationUrl = Url.Action("EmailConfirm", "Auth", new { confirmationGuidUrl = createdToken.ConfirmationGUID }, protocol: HttpContext.Request.Scheme);
-                    await emailService.SendEmailAsync(newUser.Email, "Подтвердите свою почту", $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confirmationUrl}'>Подтвердить</a>");
+                User createdUser = _userRepository.Add(newUser);
+                await _userRepository.SaveChanges();
+                ConfirmationToken createdToken = _confirmationTokenRepository.Add(newToken);
+                await _confirmationTokenRepository.SaveChanges();
 
-                    return Ok(new { message ="confirm email"});
-                }
-                else
-                {
-                    return StatusCode(409);
-                }
+                var emailService = new EmailService(_appConfiguration);
+                var confirmationUrl = Url.Action("EmailConfirm", "Auth", new { confirmationGuidUrl = createdToken.ConfirmationGUID }, protocol: HttpContext.Request.Scheme);
+                await emailService.SendEmailAsync(newUser.Email, "Подтвердите свою почту", $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confirmationUrl}'>Подтвердить</a>");
+
+                return Ok(new { message = "confirm email" });
             }
             catch (Exception ex)
             {
@@ -156,22 +141,18 @@ namespace MyNotesApplication.Controllers
         public async Task<IActionResult> EmailConfirm(string confirmationGuidUrl)
         {
             ConfirmationToken? token = _confirmationTokenRepository.GetAll().FirstOrDefault(token => token.ConfirmationGUID == confirmationGuidUrl && token.ExpiredDate > DateTime.Now);
-            if(token != null)
-            {
-                User user = _userRepository.Get(token.UserId);
-                user.EmailConfirmed = true;
 
-                _confirmationTokenRepository.Delete(token);
-                await _confirmationTokenRepository.SaveChanges();
-                _userRepository.Update(user);
-                await _userRepository.SaveChanges();
+            if(token == null) return BadRequest();
 
-                return Ok();
-            }
-            else
-            {
-                return BadRequest();
-            }
+            User user = _userRepository.Get(token.UserId);
+            user.EmailConfirmed = true;
+
+            _confirmationTokenRepository.Delete(token);
+            await _confirmationTokenRepository.SaveChanges();
+            _userRepository.Update(user);
+            await _userRepository.SaveChanges();
+
+            return Redirect(_appConfiguration.GetValue<string>("FrontRedirectUrl"));
         }
 
         public record AuthData(string Email, string Password);

@@ -39,54 +39,49 @@ namespace MyNotesApplication.Controllers
         {
             var username = GetUsernameFromJwtToken();
 
-            if (_notesRepository.Get(NoteId).UserId == _userRepository.GetAll().FirstOrDefault(u => u.Username == username).Id)
+            if(_notesRepository.Get(NoteId).UserId != _userRepository.GetAll().FirstOrDefault(u => u.Username == username).Id) return Forbid();
+
+            try
             {
-                try
+                long size = files.Sum(f => f.Length);
+
+                var fileDirectory = Path.Combine(_appEnviroment.WebRootPath, _appConfiguration.GetValue<string>("FilesStorageFolder"));
+                if (!Directory.Exists(fileDirectory))
                 {
-                    long size = files.Sum(f => f.Length);
+                    Directory.CreateDirectory(fileDirectory);
+                }
 
-                    var fileDirectory = Path.Combine(_appEnviroment.WebRootPath, _appConfiguration.GetValue<string>("FilesStorageFolder"));
-                    if (!Directory.Exists(fileDirectory))
+                foreach (var formFile in files)
+                {
+                    if (formFile.Length > 0)
                     {
-                        Directory.CreateDirectory(fileDirectory);
-                    }
+                        var fileType = formFile.ContentType;
+                        var newFileName = Path.GetRandomFileName();
+                        newFileName = newFileName.Split(".")[0] + "." + formFile.ContentType.Split("/")[1];
 
-                    foreach (var formFile in files)
-                    {
-                        if (formFile.Length > 0)
+                        var filePath = Path.Combine(fileDirectory, newFileName);
+                        using (var stream = System.IO.File.Create(filePath))
                         {
-                            var fileType = formFile.ContentType;
-                            var newFileName = Path.GetRandomFileName();
-                            newFileName = newFileName.Split(".")[0] +  "." + formFile.ContentType.Split("/")[1];
-
-                            var filePath = Path.Combine(fileDirectory, newFileName);
-                            using (var stream = System.IO.File.Create(filePath))
-                            {
-                                await formFile.CopyToAsync(stream);
-                            }
-
-                            FileModel newFile = new FileModel();
-                            newFile.Name = newFileName;
-                            newFile.NoteId = NoteId;
-                            newFile.Path = filePath;
-                            newFile.Type = fileType;
-
-                            _fileModelRepository.Add(newFile);
+                            await formFile.CopyToAsync(stream);
                         }
-                    }
-                    await _fileModelRepository.SaveChanges();
 
-                    return Ok();
+                        FileModel newFile = new FileModel();
+                        newFile.Name = newFileName;
+                        newFile.NoteId = NoteId;
+                        newFile.Path = filePath;
+                        newFile.Type = fileType;
+
+                        _fileModelRepository.Add(newFile);
+                    }
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex.ToString());
-                    return StatusCode(500);
-                }
+                await _fileModelRepository.SaveChanges();
+
+                return Ok();
             }
-            else
+            catch (Exception ex)
             {
-                return BadRequest();
+                _logger.LogError(ex.ToString());
+                return StatusCode(500);
             }
         }
 
@@ -98,30 +93,26 @@ namespace MyNotesApplication.Controllers
             var username = GetUsernameFromJwtToken();
 
             FileModel fileModel = _fileModelRepository.Get(FileId);
-            if(fileModel != null && _notesRepository.Get(fileModel.NoteId).UserId == _userRepository.GetAll().FirstOrDefault(u => u.Username == username).Id)
-            {
-                try
-                {
-                    if (System.IO.File.Exists(fileModel.Path))
-                    {
-                        string filePath = fileModel.Path;
 
-                        return PhysicalFile(fileModel.Path, fileModel.Type);
-                    }
-                    else
-                    {
-                        return NoContent();
-                    }
-                }
-                catch(Exception ex)
+            if (fileModel == null || _notesRepository.Get(fileModel.NoteId).UserId != _userRepository.GetAll().FirstOrDefault(u => u.Username == username).Id) return BadRequest();
+
+            try
+            {
+                if (System.IO.File.Exists(fileModel.Path))
                 {
-                    _logger.LogError(ex.ToString());
-                    return StatusCode(500);
+                    string filePath = fileModel.Path;
+
+                    return PhysicalFile(fileModel.Path, fileModel.Type);
+                }
+                else
+                {
+                    return NoContent();
                 }
             }
-            else
+            catch (Exception ex)
             {
-                return BadRequest();
+                _logger.LogError(ex.ToString());
+                return StatusCode(500);
             }
         }
 
@@ -134,31 +125,26 @@ namespace MyNotesApplication.Controllers
 
             FileModel fileModel = _fileModelRepository.Get(FileId);
 
-            if (fileModel != null && _notesRepository.Get(fileModel.NoteId)?.UserId == _userRepository.GetAll().FirstOrDefault(u => u.Username == username).Id)
+            if (fileModel == null || _notesRepository.Get(fileModel.NoteId)?.UserId != _userRepository.GetAll().FirstOrDefault(u => u.Username == username).Id) return BadRequest();
+
+            try
             {
-                try
+                if (System.IO.File.Exists(fileModel.Path))
                 {
-                    if (System.IO.File.Exists(fileModel.Path))
-                    {
-                        System.IO.File.Delete(fileModel.Path);
-                        _fileModelRepository.Delete(fileModel);
-                        await _notesRepository.SaveChanges();
-                        return Ok();
-                    }
-                    else
-                    {
-                        return NotFound();
-                    }
+                    System.IO.File.Delete(fileModel.Path);
+                    _fileModelRepository.Delete(fileModel);
+                    await _notesRepository.SaveChanges();
+                    return Ok();
                 }
-                catch(Exception ex)
+                else
                 {
-                    _logger.LogError(ex.ToString());
-                    return StatusCode(500);
+                    return NotFound();
                 }
             }
-            else
+            catch (Exception ex)
             {
-                return Forbid();
+                _logger.LogError(ex.ToString());
+                return StatusCode(500);
             }
         }
 
