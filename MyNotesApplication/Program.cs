@@ -9,6 +9,9 @@ using System.Text;
 using MyNotesApplication.Services;
 using Microsoft.Extensions.Configuration;
 
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration
     .AddJsonFile("appsettings.json")
@@ -16,6 +19,17 @@ builder.Configuration
 
 IConfigurationRoot _DBconfigString = new ConfigurationBuilder().SetBasePath(builder.Environment.ContentRootPath).AddJsonFile("DBConfig.json").Build();
 IConfiguration _configuration = builder.Configuration;
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy.AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .WithOrigins(_configuration.GetValue<string>("FrontRedirectUrl"));
+                      });
+});
 
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession();
@@ -52,6 +66,8 @@ app.UseSession();
 
 app.UseHttpsRedirection();
 app.UseRouting();
+
+app.UseCors(MyAllowSpecificOrigins);
 
 app.UseAuthentication();
 app.UseAuthorization();
