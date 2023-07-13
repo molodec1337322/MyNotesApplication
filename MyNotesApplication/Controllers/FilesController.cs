@@ -11,7 +11,7 @@ using System.Security.Claims;
 
 namespace MyNotesApplication.Controllers
 {
-    [Route("api/Files")]
+    [Route("api/v1/Files")]
     public class FilesController : Controller
     {
         private readonly IRepository<FileModel> _fileModelRepository;

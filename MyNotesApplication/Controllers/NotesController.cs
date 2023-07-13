@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace MyNotesApplication.Controllers
 {
-    [Route("api/Notes")]
+    [Route("api/v1/Notes")]
     public class NotesController : Controller
     {
         private readonly IRepository<Note> _noteRepository;
@@ -96,7 +96,7 @@ namespace MyNotesApplication.Controllers
             }
             else
             {
-                return NotFound();
+                return NoContent();
             }
         }
 
@@ -121,7 +121,7 @@ namespace MyNotesApplication.Controllers
                     Note updatedNote = _noteRepository.Update(note);
                     await _noteRepository.SaveChanges();
 
-                    return Ok(updatedNote);
+                    return Ok();
                 }
                 else
                 {
@@ -130,8 +130,19 @@ namespace MyNotesApplication.Controllers
             }
             else
             {
-                return NotFound();
+                return NoContent();
             }
+        }
+
+        [HttpPut]
+        [Authorize]
+        [Route("Update")]
+        public async Task<IActionResult> UpdateNotes()
+        {
+            string username = GetUsernameFromJwtToken();
+            NotesData? notes = await HttpContext.Request.ReadFromJsonAsync<NotesData>();
+
+            return Ok();
         }
 
         [HttpPut]
@@ -162,7 +173,7 @@ namespace MyNotesApplication.Controllers
             }
             else
             {
-                return NotFound();
+                return NoContent();
             }
         }
 
@@ -187,17 +198,17 @@ namespace MyNotesApplication.Controllers
                 }
                 else
                 {
-                    await HttpContext.Response.WriteAsJsonAsync(new { message = "notFound" });
                     return Forbid();
                 }
             }
             else
             {
-                return NotFound();
+                return NoContent();
             }
         }
         
         public record NoteData(string Name, string Text, string PathToFile, string OrderInToDo);
+        public record NotesData(IEnumerable<NoteData> notes);
 
         private string GetUsernameFromJwtToken()
         {
