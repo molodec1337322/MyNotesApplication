@@ -8,6 +8,7 @@ using MyNotesApplication.Data.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using MyNotesApplication.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MyNotesApplication.Controllers
 {
@@ -77,6 +78,7 @@ namespace MyNotesApplication.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         [Route("Logout")]
         public async Task<IActionResult> Logout() 
         {
