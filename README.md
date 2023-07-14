@@ -1,5 +1,5 @@
 # Web Notes Application Web API
-Backend часть для приложения по организации личных дел пользователя
+Backend часть для приложения по организации личных дел.
 
 + .NET 6.0 Framework <br />
 + PostgreSQL
