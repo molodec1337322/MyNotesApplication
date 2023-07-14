@@ -9,6 +9,10 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using MyNotesApplication.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
+using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 
 namespace MyNotesApplication.Controllers
 {
@@ -19,13 +23,15 @@ namespace MyNotesApplication.Controllers
         private readonly IRepository<ConfirmationToken> _confirmationTokenRepository;
         private readonly IConfiguration _appConfiguration;
         private readonly ILogger<AuthController> _logger;
+        private readonly IDistributedCache _cache;
 
-        public AuthController(IRepository<User> userRepo, IRepository<ConfirmationToken> confirmationTokenRepo, IConfiguration appConfiguration, ILogger<AuthController> logger)
+        public AuthController(IRepository<User> userRepo, IRepository<ConfirmationToken> confirmationTokenRepo, IConfiguration appConfiguration, ILogger<AuthController> logger, IDistributedCache disturbedCache)
         {
             _userRepository = userRepo;
             _confirmationTokenRepository = confirmationTokenRepo;
             _appConfiguration = appConfiguration;
             _logger = logger;
+            _cache = disturbedCache;
         }
 
         /// <summary>
@@ -43,9 +49,37 @@ namespace MyNotesApplication.Controllers
                 string email = authData.Email;
                 string password = authData.Password;
 
-                User? user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email);
+                User? user = null;
+                var userCachedStr = "";
+                bool isCacheServerOnline = true;
 
-                if(user == null || !user.EmailConfirmed) return NotFound();
+                try
+                {
+                    userCachedStr = await _cache.GetStringAsync(email);
+                }
+                catch (RedisConnectionException redisEx)
+                {
+                    _logger.LogWarning(redisEx.ToString());
+                    isCacheServerOnline = false;
+                }
+
+                if (userCachedStr != "") user = JsonSerializer.Deserialize<User>(userCachedStr);
+                else
+                {
+                    user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email);
+
+                    if (user == null || !user.EmailConfirmed) return NotFound();
+
+                    if (isCacheServerOnline)
+                    {
+                        var userJSONstr = JsonSerializer.Serialize(user);
+                        _logger.LogDebug("recived data from cahce");
+                        await _cache.SetStringAsync(email, userJSONstr, new DistributedCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                        });
+                    }
+                }
 
                 PasswordHasher<User> ph = new PasswordHasher<User>();
                 if (ph.VerifyHashedPassword(user, user.Password, password) != PasswordVerificationResult.Success) return NotFound();
@@ -123,6 +157,19 @@ namespace MyNotesApplication.Controllers
                 ConfirmationToken createdToken = _confirmationTokenRepository.Add(newToken);
                 await _confirmationTokenRepository.SaveChanges();
 
+                try
+                {
+                    var tokenJSONStr = JsonSerializer.Serialize(newToken);
+                    await _cache.SetStringAsync(newToken.ConfirmationGUID, tokenJSONStr, new DistributedCacheEntryOptions
+                    {
+                        AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(1)
+                    });
+                }
+                catch (RedisConnectionException redisEx)
+                {
+                    _logger.LogWarning(redisEx.Message);
+                }
+
                 var emailService = new EmailService(_appConfiguration);
                 var confirmationUrl = Url.Action("EmailConfirm", "Auth", new { confirmationGuidUrl = createdToken.ConfirmationGUID }, protocol: HttpContext.Request.Scheme);
                 await emailService.SendEmailAsync(newUser.Email, "Подтвердите свою почту", $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confirmationUrl}'>Подтвердить</a>");
@@ -140,9 +187,21 @@ namespace MyNotesApplication.Controllers
         [Route("EmailConfirm/{confirmationGuidUrl}")]
         public async Task<IActionResult> EmailConfirm(string confirmationGuidUrl)
         {
-            ConfirmationToken? token = _confirmationTokenRepository.GetAll().FirstOrDefault(token => token.ConfirmationGUID == confirmationGuidUrl && token.ExpiredDate > DateTime.Now);
+            ConfirmationToken? token = null;
+            var tokenCachedStr = "";
+            try
+            {
+                tokenCachedStr = await _cache.GetStringAsync(confirmationGuidUrl);
+            }
+            catch (RedisConnectionException redisEx)
+            {
+                _logger.LogWarning(redisEx.Message);
+            }
 
-            if(token == null) return BadRequest();
+            if(tokenCachedStr != "") token = JsonSerializer.Deserialize<ConfirmationToken>(tokenCachedStr);
+            else token = _confirmationTokenRepository.GetAll().FirstOrDefault(token => token.ConfirmationGUID == confirmationGuidUrl && token.ExpiredDate > DateTime.Now);
+
+            if (token == null) return BadRequest();
 
             User user = _userRepository.Get(token.UserId);
             user.EmailConfirmed = true;
