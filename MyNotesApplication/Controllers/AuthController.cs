@@ -10,9 +10,6 @@ using System.Security.Claims;
 using MyNotesApplication.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Caching.Distributed;
-using System.Text.Json;
-using Microsoft.Extensions.Logging;
-using StackExchange.Redis;
 
 namespace MyNotesApplication.Controllers
 {
@@ -46,43 +43,18 @@ namespace MyNotesApplication.Controllers
             {
                 AuthData? authData = await HttpContext.Request.ReadFromJsonAsync<AuthData>();
 
+                if (authData == null) return BadRequest();
+
                 string email = authData.Email;
                 string password = authData.Password;
 
-                User? user = null;
-                var userCachedStr = "";
-                bool isCacheServerOnline = true;
-
-                try
-                {
-                    userCachedStr = await _cache.GetStringAsync(email);
-                }
-                catch (RedisConnectionException redisEx)
-                {
-                    _logger.LogWarning(redisEx.ToString());
-                    isCacheServerOnline = false;
-                }
-
-                if (userCachedStr != "") user = JsonSerializer.Deserialize<User>(userCachedStr);
-                else
-                {
-                    user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email);
-
-                    if (user == null || !user.EmailConfirmed) return NotFound();
-
-                    if (isCacheServerOnline)
-                    {
-                        var userJSONstr = JsonSerializer.Serialize(user);
-                        _logger.LogDebug("recived data from cahce");
-                        await _cache.SetStringAsync(email, userJSONstr, new DistributedCacheEntryOptions
-                        {
-                            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
-                        });
-                    }
-                }
+                User? user = user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email);
+                if (user == null) return NotFound();
+                if (!user.EmailConfirmed) return Unauthorized(new { message = "account not activated", email = user.Email});
 
                 PasswordHasher<User> ph = new PasswordHasher<User>();
                 if (ph.VerifyHashedPassword(user, user.Password, password) != PasswordVerificationResult.Success) return NotFound();
+                
 
                 var claims = new List<Claim> { new Claim(ClaimTypes.Name, user.Username) };
                 var jwt = new JwtSecurityToken(
@@ -117,6 +89,17 @@ namespace MyNotesApplication.Controllers
             }
         }
 
+        private ConfirmationToken GenerateNewRegistrationToken(User user)
+        {
+            ConfirmationToken token = new ConfirmationToken();
+            token.User = user;
+            token.CreatedDate = DateTime.UtcNow;
+            token.ExpiredDate = DateTime.UtcNow.AddDays(1);
+            token.ConfirmationGUID = Guid.NewGuid().ToString();
+
+            return token;
+        }
+
         /// <summary>
         /// Req: {"Email": "123", "Username": "Mol" "Password": "112"}
         /// Res: {Bearer: jwtToken}
@@ -128,6 +111,8 @@ namespace MyNotesApplication.Controllers
             try
             {
                 RegisterData? registerData = await HttpContext.Request.ReadFromJsonAsync<RegisterData>();
+
+                if(registerData == null) return BadRequest();
 
                 string email = registerData.Email;
                 string password = registerData.Password;
@@ -143,32 +128,14 @@ namespace MyNotesApplication.Controllers
                 newUser.Username = username;
                 newUser.EmailConfirmed = false;
 
-                ConfirmationToken newToken = new ConfirmationToken();
-                newToken.User = newUser;
-                newToken.CreatedDate = DateTime.UtcNow;
-                newToken.ExpiredDate = DateTime.UtcNow.AddDays(1);
-                newToken.ConfirmationGUID = Guid.NewGuid().ToString();
-
                 PasswordHasher<User> ph = new PasswordHasher<User>();
                 newUser.Password = ph.HashPassword(newUser, password);
 
                 User createdUser = _userRepository.Add(newUser);
                 await _userRepository.SaveChanges();
-                ConfirmationToken createdToken = _confirmationTokenRepository.Add(newToken);
-                await _confirmationTokenRepository.SaveChanges();
 
-                try
-                {
-                    var tokenJSONStr = JsonSerializer.Serialize(newToken);
-                    await _cache.SetStringAsync(newToken.ConfirmationGUID, tokenJSONStr, new DistributedCacheEntryOptions
-                    {
-                        AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(1)
-                    });
-                }
-                catch (RedisConnectionException redisEx)
-                {
-                    _logger.LogWarning(redisEx.Message);
-                }
+                ConfirmationToken createdToken = _confirmationTokenRepository.Add(GenerateNewRegistrationToken(newUser));
+                await _confirmationTokenRepository.SaveChanges();
 
                 var emailService = new EmailService(_appConfiguration);
                 var confirmationUrl = Url.Action("EmailConfirm", "Auth", new { confirmationGuidUrl = createdToken.ConfirmationGUID }, protocol: HttpContext.Request.Scheme);
@@ -183,23 +150,48 @@ namespace MyNotesApplication.Controllers
             }
         }
 
+        /// <summary>
+        /// req{Email: "email@email.com"}
+        /// res{}
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("NewActivationMail")]
+        public async Task<IActionResult> NewActivationMail()
+        {
+            EmailData? emailData = await HttpContext.Request.ReadFromJsonAsync<EmailData>();
+
+            if(emailData == null) return BadRequest();
+
+            string email = emailData.Email;
+
+            User? user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email);
+
+            if (user == null) return BadRequest(new {message = "no user with such email"});
+            if (user.EmailConfirmed) return BadRequest(new { message = "already activated" });
+
+            ConfirmationToken oldToken = _confirmationTokenRepository.GetAll().FirstOrDefault(t => t.UserId == user.Id);
+            if(oldToken != null)
+            {
+                _confirmationTokenRepository.Delete(oldToken);
+                await _confirmationTokenRepository.SaveChanges();
+            }
+
+            ConfirmationToken newToken = _confirmationTokenRepository.Add(GenerateNewRegistrationToken(user));
+            await _confirmationTokenRepository.SaveChanges();
+
+            var emailService = new EmailService(_appConfiguration);
+            var confirmationUrl = Url.Action("EmailConfirm", "Auth", new { confirmationGuidUrl = newToken.ConfirmationGUID }, protocol: HttpContext.Request.Scheme);
+            await emailService.SendEmailAsync(user.Email, "Подтвердите свою почту", $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confirmationUrl}'>Подтвердить</a>");
+
+            return Ok();
+        }
+
         [HttpGet]
         [Route("EmailConfirm/{confirmationGuidUrl}")]
         public async Task<IActionResult> EmailConfirm(string confirmationGuidUrl)
         {
-            ConfirmationToken? token = null;
-            var tokenCachedStr = "";
-            try
-            {
-                tokenCachedStr = await _cache.GetStringAsync(confirmationGuidUrl);
-            }
-            catch (RedisConnectionException redisEx)
-            {
-                _logger.LogWarning(redisEx.Message);
-            }
-
-            if(tokenCachedStr != "") token = JsonSerializer.Deserialize<ConfirmationToken>(tokenCachedStr);
-            else token = _confirmationTokenRepository.GetAll().FirstOrDefault(token => token.ConfirmationGUID == confirmationGuidUrl && token.ExpiredDate > DateTime.Now);
+            ConfirmationToken? token = _confirmationTokenRepository.GetAll().FirstOrDefault(token => token.ConfirmationGUID == confirmationGuidUrl && token.ExpiredDate > DateTime.Now);
 
             if (token == null) return BadRequest();
 
@@ -215,6 +207,7 @@ namespace MyNotesApplication.Controllers
         }
 
         public record AuthData(string Email, string Password);
+        public record EmailData(string Email);
         public record RegisterData(string Email, string Username, string Password);
     }
 }

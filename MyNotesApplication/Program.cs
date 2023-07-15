@@ -44,12 +44,6 @@ builder.Services.AddScoped<IRepository<FileModel>, FileModelRepositoryPostgres>(
 
 builder.Services.AddScoped<EmailService>();
 
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = _configuration.GetValue<string>("RedisAddress");
-    options.InstanceName = _configuration.GetValue<string>("RedisInstanseName");
-});
-
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
