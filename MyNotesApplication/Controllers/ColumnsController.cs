@@ -39,14 +39,14 @@ namespace MyNotesApplication.Controllers
 
         private bool IsUserAllowedToInteractWithBoard(User user, Board board)
         {
-            UserBoardRole? ubr = _userBoardRoleRepository.GetAll().FirstOrDefault(u => u.UserId == user.Id && u.BoardId == board.Id);
+            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.BoardId == board.Id).FirstOrDefault();
             if (ubr == null) return false;
             return true;
         }
 
         private bool IsUserAllowedToInteractWithBoard(User user, Board board, UserBoardRoles role)
         {
-            UserBoardRole? ubr = _userBoardRoleRepository.GetAll().FirstOrDefault(u => u.UserId == user.Id && u.BoardId == board.Id && u.Role == role.ToString());
+            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.BoardId == board.Id && u.Role == role.ToString()).FirstOrDefault();
             if (ubr == null) return false;
             return true;
         }
@@ -67,7 +67,7 @@ namespace MyNotesApplication.Controllers
             Board? board = _boardRepository.Get(BoardId);
             if (board == null) return BadRequest();
 
-            User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
+            User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
             if(!IsUserAllowedToInteractWithBoard(user, board)) return Forbid();
 
             List<Column> columns = _columnRepository.GetAll().Where(c => c.BoardId == BoardId).ToList();
@@ -88,7 +88,7 @@ namespace MyNotesApplication.Controllers
             string username = GetUsernameFromJwtToken();
             NewColumnData? newColumnData = await HttpContext.Request.ReadFromJsonAsync<NewColumnData>();
 
-            User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
+            User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
 
             Board? board = _boardRepository.Get(newColumnData.BoardId);
             if (board == null) return BadRequest();
@@ -101,7 +101,6 @@ namespace MyNotesApplication.Controllers
             newColumn.Name = newColumnData.Name;
 
             Column column = _columnRepository.Add(newColumn);
-            await _columnRepository.SaveChanges();
 
             return Ok(column);
         }

@@ -40,14 +40,14 @@ namespace MyNotesApplication.Controllers
 
         private bool IsUserAllowedToInteractWithBoard(User user, Board board)
         {
-            UserBoardRole? ubr = _userBoardRoleRepository.GetAll().FirstOrDefault(u => u.UserId == user.Id && u.BoardId == board.Id);
+            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.BoardId == board.Id).FirstOrDefault();
             if (ubr == null) return false;
             return true;
         }
 
         private bool IsUserAllowedToInteractWithBoard(User user, Board board, UserBoardRoles role)
         {
-            UserBoardRole? ubr = _userBoardRoleRepository.GetAll().FirstOrDefault(u => u.UserId == user.Id && u.BoardId == board.Id && u.Role == role.ToString());
+            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.BoardId == board.Id && u.Role == role.ToString()).FirstOrDefault();
             if (ubr == null) return false;
             return true;
         }
@@ -63,9 +63,9 @@ namespace MyNotesApplication.Controllers
         public async Task<IActionResult> GetBoards()
         {
             string username = GetUsernameFromJwtToken();
-            User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
+            User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
 
-            List<UserBoardRole> ubrList = _userBoardRoleRepository.GetAll().Where(u => u.UserId == user.Id && u.Role == UserBoardRoles.OWNER.ToString()).ToList();
+            List<UserBoardRole> ubrList = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.Role == UserBoardRoles.OWNER.ToString()).ToList();
             List<Board> boardList = new List<Board>();//_boardRepository.GetAll().Where(b => ).ToList();
             foreach (var ubr in ubrList)
             {
@@ -85,7 +85,7 @@ namespace MyNotesApplication.Controllers
             Board? board = _boardRepository.Get(BoardId);
             if (board == null) return NotFound();
 
-            User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
+            User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
             if (!IsUserAllowedToInteractWithBoard(user, board)) return Forbid();
 
             return Ok(board);
@@ -105,13 +105,12 @@ namespace MyNotesApplication.Controllers
 
             NewBoardData? boardData = await HttpContext.Request.ReadFromJsonAsync<NewBoardData>();
 
-            User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
+            User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
 
             Board newBoard = new Board();
             newBoard.Name = boardData.Name;
 
             Board board = _boardRepository.Add(newBoard);
-            await _boardRepository.SaveChanges();
 
             UserBoardRole newUBR = new UserBoardRole();
             newUBR.Board = board;
@@ -119,7 +118,6 @@ namespace MyNotesApplication.Controllers
             newUBR.Role = UserBoardRoles.OWNER.ToString();
 
             UserBoardRole ubr = _userBoardRoleRepository.Add(newUBR);
-            await _boardRepository.SaveChanges();
 
             return Ok(board);
         }

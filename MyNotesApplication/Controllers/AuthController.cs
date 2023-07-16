@@ -10,6 +10,7 @@ using System.Security.Claims;
 using MyNotesApplication.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Caching.Distributed;
+using MyNotesApplication.Data;
 
 namespace MyNotesApplication.Controllers
 {
@@ -20,13 +21,15 @@ namespace MyNotesApplication.Controllers
         private readonly IRepository<ConfirmationToken> _confirmationTokenRepository;
         private readonly IConfiguration _appConfiguration;
         private readonly ILogger<AuthController> _logger;
+        private readonly MyDBContext _dbContext;
 
-        public AuthController(IRepository<User> userRepo, IRepository<ConfirmationToken> confirmationTokenRepo, IConfiguration appConfiguration, ILogger<AuthController> logger)
+        public AuthController(IRepository<User> userRepo, IRepository<ConfirmationToken> confirmationTokenRepo, IConfiguration appConfiguration, ILogger<AuthController> logger, MyDBContext dbContext)
         {
             _userRepository = userRepo;
             _confirmationTokenRepository = confirmationTokenRepo;
             _appConfiguration = appConfiguration;
             _logger = logger;
+            _dbContext = dbContext;
         }
 
         /// <summary>
@@ -42,7 +45,7 @@ namespace MyNotesApplication.Controllers
             string email = authData.Email;
             string password = authData.Password;
 
-            User? user = user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email);
+            User? user = _userRepository.Get(u => u.Email == email).FirstOrDefault();
             if (user == null) return NotFound();
             if (!user.EmailConfirmed) return Unauthorized(new { message = "account not activated", email = user.Email });
 
@@ -102,7 +105,7 @@ namespace MyNotesApplication.Controllers
             string password = registerData.Password;
             string username = registerData.Username;
 
-            User? user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email || u.Username == username);
+            User? user = _userRepository.Get(u => u.Email == email || u.Username == username).FirstOrDefault();
 
             if (user != null) return Conflict();
 
@@ -116,10 +119,8 @@ namespace MyNotesApplication.Controllers
             newUser.Password = ph.HashPassword(newUser, password);
 
             User createdUser = _userRepository.Add(newUser);
-            await _userRepository.SaveChanges();
 
             ConfirmationToken createdToken = _confirmationTokenRepository.Add(GenerateNewRegistrationToken(newUser));
-            await _confirmationTokenRepository.SaveChanges();
 
             var emailService = new EmailService(_appConfiguration);
             var confirmationUrl = Url.Action("EmailConfirm", "Auth", new { confirmationGuidUrl = createdToken.ConfirmationGUID }, protocol: HttpContext.Request.Scheme);
@@ -141,12 +142,12 @@ namespace MyNotesApplication.Controllers
 
             string email = emailData.Email;
 
-            User? user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email);
+            User? user = _userRepository.Get(u => u.Email == email).FirstOrDefault();
 
             if (user == null) return BadRequest(new {message = "no user with such email"});
             if (user.EmailConfirmed) return BadRequest(new { message = "already activated" });
 
-            ConfirmationToken? oldToken = _confirmationTokenRepository.GetAll().FirstOrDefault(t => t.UserId == user.Id);
+            ConfirmationToken? oldToken = _confirmationTokenRepository.Get(t => t.UserId == user.Id).FirstOrDefault();
             if(oldToken != null)
             {
                 _confirmationTokenRepository.Delete(oldToken);
@@ -167,7 +168,7 @@ namespace MyNotesApplication.Controllers
         [Route("EmailConfirm/{confirmationGuidUrl}")]
         public async Task<IActionResult> EmailConfirm(string confirmationGuidUrl)
         {
-            ConfirmationToken? token = _confirmationTokenRepository.GetAll().FirstOrDefault(token => token.ConfirmationGUID == confirmationGuidUrl);
+            ConfirmationToken? token = _confirmationTokenRepository.Get(t => t.ConfirmationGUID == confirmationGuidUrl).FirstOrDefault();
 
             if (token == null) return BadRequest("no such token found");
             if (token.ExpiredDate < DateTime.UtcNow) return BadRequest("Token expired, request it again in registration form");
@@ -176,9 +177,8 @@ namespace MyNotesApplication.Controllers
             user.EmailConfirmed = true;
 
             _confirmationTokenRepository.Delete(token);
-            await _confirmationTokenRepository.SaveChanges();
             _userRepository.Update(user);
-            await _userRepository.SaveChanges();
+
 
             return Redirect(_appConfiguration.GetValue<string>("FrontRedirectUrl"));
         }
