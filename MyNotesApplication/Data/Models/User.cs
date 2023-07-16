@@ -11,7 +11,9 @@ namespace MyNotesApplication.Data.Models
         [DataType(DataType.Password)]
         public string Password { get; set; }
         public bool EmailConfirmed { get; set; }
+        public IEnumerable<UserBoardRole> UserBoards { get; set; }
         public IEnumerable<Note> Notes { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore]
 
         public ConfirmationToken ConfirmationToken { get; set; }
     }

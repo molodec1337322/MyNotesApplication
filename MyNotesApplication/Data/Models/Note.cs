@@ -12,8 +12,6 @@
         public DateTime ChangedDate { get; set; }
 
         public bool IsDone { get; set; }
-
-        public string Type { get; set; }
         public int OrderPlace { get; set; }
 
         public DateTime DateDone { get; set; }
@@ -21,14 +19,9 @@
 
         [System.Text.Json.Serialization.JsonIgnore]
         public User User { get; set; }
+        public int ColumnId { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore]
+        public Column Column { get; set; }
         public IEnumerable<FileModel> Files { get; set; }
-    }
-
-    public enum NoteType
-    {
-        ToDo,
-        GotInWork,
-        InProgress,
-        Done
     }
 }

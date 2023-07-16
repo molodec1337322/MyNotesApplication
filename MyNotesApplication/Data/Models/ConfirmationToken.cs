@@ -7,6 +7,7 @@
         public DateTime CreatedDate { get; set; }
         public DateTime ExpiredDate { get; set; }
         public int UserId { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore]
         public User User { get; set; }
     }
 }

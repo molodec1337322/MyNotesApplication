@@ -14,5 +14,8 @@ namespace MyNotesApplication.Data
         public DbSet<User> Users { get; set; }
         public DbSet<ConfirmationToken> ConfirmationTokens { get; set; }
         public DbSet<FileModel> FileModels { get; set; }
+        public DbSet<UserBoardRole> UserBoardRoles { get; set; }
+        public DbSet<Board> Boards { get; set; }
+        public DbSet<Column> Columns { get; set; } 
     }
 }

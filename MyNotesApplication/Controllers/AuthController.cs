@@ -20,15 +20,13 @@ namespace MyNotesApplication.Controllers
         private readonly IRepository<ConfirmationToken> _confirmationTokenRepository;
         private readonly IConfiguration _appConfiguration;
         private readonly ILogger<AuthController> _logger;
-        private readonly IDistributedCache _cache;
 
-        public AuthController(IRepository<User> userRepo, IRepository<ConfirmationToken> confirmationTokenRepo, IConfiguration appConfiguration, ILogger<AuthController> logger, IDistributedCache disturbedCache)
+        public AuthController(IRepository<User> userRepo, IRepository<ConfirmationToken> confirmationTokenRepo, IConfiguration appConfiguration, ILogger<AuthController> logger)
         {
             _userRepository = userRepo;
             _confirmationTokenRepository = confirmationTokenRepo;
             _appConfiguration = appConfiguration;
             _logger = logger;
-            _cache = disturbedCache;
         }
 
         /// <summary>
@@ -39,38 +37,30 @@ namespace MyNotesApplication.Controllers
         [Route("Login")]
         public async Task<IActionResult> Login()
         {
-            try
-            {
-                AuthData? authData = await HttpContext.Request.ReadFromJsonAsync<AuthData>();
+            AuthData? authData = await HttpContext.Request.ReadFromJsonAsync<AuthData>();
 
-                if (authData == null) return BadRequest();
+            if (authData == null) return BadRequest();
 
-                string email = authData.Email;
-                string password = authData.Password;
+            string email = authData.Email;
+            string password = authData.Password;
 
-                User? user = user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email);
-                if (user == null) return NotFound();
-                if (!user.EmailConfirmed) return Unauthorized(new { message = "account not activated", email = user.Email});
+            User? user = user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email);
+            if (user == null) return NotFound();
+            if (!user.EmailConfirmed) return Unauthorized(new { message = "account not activated", email = user.Email });
 
-                PasswordHasher<User> ph = new PasswordHasher<User>();
-                if (ph.VerifyHashedPassword(user, user.Password, password) != PasswordVerificationResult.Success) return NotFound();
-                
+            PasswordHasher<User> ph = new PasswordHasher<User>();
+            if (ph.VerifyHashedPassword(user, user.Password, password) != PasswordVerificationResult.Success) return NotFound();
 
-                var claims = new List<Claim> { new Claim(ClaimTypes.Name, user.Username) };
-                var jwt = new JwtSecurityToken(
-                        issuer: AuthOptions.ISSUER,
-                        audience: AuthOptions.AUDIENCE,
-                        claims: claims,
-                        expires: DateTime.UtcNow.Add(TimeSpan.FromHours(12)),
-                        signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
 
-                return Ok(new { Token = "Bearer " + new JwtSecurityTokenHandler().WriteToken(jwt) });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.ToString());
-                return BadRequest();
-            }
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, user.Username) };
+            var jwt = new JwtSecurityToken(
+                    issuer: AuthOptions.ISSUER,
+                    audience: AuthOptions.AUDIENCE,
+                    claims: claims,
+                    expires: DateTime.UtcNow.Add(TimeSpan.FromHours(12)),
+                    signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
+
+            return Ok(new { Token = "Bearer " + new JwtSecurityTokenHandler().WriteToken(jwt) });
         }
 
         [HttpPost]
@@ -94,7 +84,7 @@ namespace MyNotesApplication.Controllers
             ConfirmationToken token = new ConfirmationToken();
             token.User = user;
             token.CreatedDate = DateTime.UtcNow;
-            token.ExpiredDate = DateTime.UtcNow.AddDays(1);
+            token.ExpiredDate = DateTime.UtcNow.AddHours(2);
             token.ConfirmationGUID = Guid.NewGuid().ToString();
 
             return token;
@@ -108,46 +98,38 @@ namespace MyNotesApplication.Controllers
         [Route("Registration")]
         public async Task<IActionResult> Register()
         {
-            try
-            {
-                RegisterData? registerData = await HttpContext.Request.ReadFromJsonAsync<RegisterData>();
+            RegisterData? registerData = await HttpContext.Request.ReadFromJsonAsync<RegisterData>();
 
-                if(registerData == null) return BadRequest();
+            if (registerData == null) return BadRequest();
 
-                string email = registerData.Email;
-                string password = registerData.Password;
-                string username = registerData.Username;
+            string email = registerData.Email;
+            string password = registerData.Password;
+            string username = registerData.Username;
 
-                User? user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email || u.Username == username);
+            User? user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email || u.Username == username);
 
-                if (user != null) return StatusCode(409);
+            if (user != null) return Conflict();
 
-                User newUser = new User();
-                newUser.Email = email;
-                newUser.Password = password;
-                newUser.Username = username;
-                newUser.EmailConfirmed = false;
+            User newUser = new User();
+            newUser.Email = email;
+            newUser.Password = password;
+            newUser.Username = username;
+            newUser.EmailConfirmed = false;
 
-                PasswordHasher<User> ph = new PasswordHasher<User>();
-                newUser.Password = ph.HashPassword(newUser, password);
+            PasswordHasher<User> ph = new PasswordHasher<User>();
+            newUser.Password = ph.HashPassword(newUser, password);
 
-                User createdUser = _userRepository.Add(newUser);
-                await _userRepository.SaveChanges();
+            User createdUser = _userRepository.Add(newUser);
+            await _userRepository.SaveChanges();
 
-                ConfirmationToken createdToken = _confirmationTokenRepository.Add(GenerateNewRegistrationToken(newUser));
-                await _confirmationTokenRepository.SaveChanges();
+            ConfirmationToken createdToken = _confirmationTokenRepository.Add(GenerateNewRegistrationToken(newUser));
+            await _confirmationTokenRepository.SaveChanges();
 
-                var emailService = new EmailService(_appConfiguration);
-                var confirmationUrl = Url.Action("EmailConfirm", "Auth", new { confirmationGuidUrl = createdToken.ConfirmationGUID }, protocol: HttpContext.Request.Scheme);
-                await emailService.SendEmailAsync(newUser.Email, "Подтвердите свою почту", $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confirmationUrl}'>Подтвердить</a>");
+            var emailService = new EmailService(_appConfiguration);
+            var confirmationUrl = Url.Action("EmailConfirm", "Auth", new { confirmationGuidUrl = createdToken.ConfirmationGUID }, protocol: HttpContext.Request.Scheme);
+            await emailService.SendEmailAsync(newUser.Email, "Подтвердите свою почту", $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confirmationUrl}'>Подтвердить</a>");
 
-                return Ok(new { message = "confirm email" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.ToString());
-                return StatusCode(500);
-            }
+            return Ok(new { message = "confirm email" });
         }
 
         /// <summary>
@@ -191,9 +173,10 @@ namespace MyNotesApplication.Controllers
         [Route("EmailConfirm/{confirmationGuidUrl}")]
         public async Task<IActionResult> EmailConfirm(string confirmationGuidUrl)
         {
-            ConfirmationToken? token = _confirmationTokenRepository.GetAll().FirstOrDefault(token => token.ConfirmationGUID == confirmationGuidUrl && token.ExpiredDate > DateTime.Now);
+            ConfirmationToken? token = _confirmationTokenRepository.GetAll().FirstOrDefault(token => token.ConfirmationGUID == confirmationGuidUrl);
 
-            if (token == null) return BadRequest();
+            if (token == null) return BadRequest("no such token found");
+            if (token.ExpiredDate > DateTime.UtcNow) return BadRequest("Token expired, request it again in registration form");
 
             User user = _userRepository.Get(token.UserId);
             user.EmailConfirmed = true;
