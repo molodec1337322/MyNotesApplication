@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using static MyNotesApplication.Controllers.NotesController;
 
 namespace MyNotesApplication.Controllers
 {
@@ -106,14 +107,6 @@ namespace MyNotesApplication.Controllers
             return true;
         }
 
-        private bool IsNoteInBoard(Board board, Note note)
-        {
-            Column? col = _columnRepository.GetAll().FirstOrDefault(c => c.BoardId == board.Id && note.ColumnId == c.Id);
-
-            if (col == null) return false;
-            return true;
-        }
-
         [HttpGet]
         [Route("GetLimit")]
         public async Task<IActionResult> GetNotesLimit()
@@ -132,32 +125,28 @@ namespace MyNotesApplication.Controllers
         public async Task<IActionResult> AddNote()
         {
             string username = GetUsernameFromJwtToken();
-            NewNoteData? noteData = await HttpContext.Request.ReadFromJsonAsync<NewNoteData>();
+            NewNoteData? newNoteData = await HttpContext.Request.ReadFromJsonAsync<NewNoteData>();
 
-            User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
+            User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
 
-            Column? col = _columnRepository.Get(noteData.ColumnId);
-            Board? board = _boardRepository.Get(noteData.BoardId);
-            if (col == null || board == null || board.Id != col.BoardId) return BadRequest();
-
-            board.Columns = board.Columns;
-
-            UserBoardRole? ubr = _userBoardRoleRepository.GetAll().FirstOrDefault(u => u.UserId == user.Id && noteData.BoardId == u.BoardId && u.Role == UserBoardRoles.OWNER.ToString());
+            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.Board.Id == newNoteData.BoardId && u.Role == UserBoardRoles.OWNER.ToString()).FirstOrDefault();
             if (ubr == null) return Forbid();
+            
+            Column? column = _columnRepository.Get(c => c.BoardId == newNoteData.BoardId).FirstOrDefault();
+            if (column == null) return BadRequest();
 
-            List<Note> notesInBoard = _noteRepository.GetAll().Where(n => n.BoardId == noteData.BoardId).ToList();
-            if (notesInBoard.Count >= _appConfiguration.GetValue<int>("NotesLimitPerUser")) return Forbid();
+            int notesCount = _noteRepository.Get(n => n.BoardId == newNoteData.BoardId).Count();
+            if (notesCount >= _appConfiguration.GetValue<int>("NotesLimitPerUser")) return Forbid();
 
             Note newNote = new Note();
-            newNote.Text = noteData.Text;
-            newNote.Name = noteData.Name;
+            newNote.Text = newNoteData.Text;
+            newNote.Name = newNoteData.Name;
             newNote.CreatedDate = DateTime.UtcNow;
-            newNote.BoardId = noteData.BoardId;
-            newNote.ColumnId = noteData.ColumnId;
-            newNote.OrderPlace = noteData.OrderPlace;
+            newNote.BoardId = newNoteData.BoardId;
+            newNote.ColumnId = newNoteData.ColumnId;
+            newNote.OrderPlace = newNoteData.OrderPlace;
 
             Note note = _noteRepository.Add(newNote);
-            await _noteRepository.SaveChanges();
 
             return Ok(note);
         }
