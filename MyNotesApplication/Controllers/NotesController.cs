@@ -115,7 +115,7 @@ namespace MyNotesApplication.Controllers
         }
 
         /// <summary>
-        /// Req {"Name" = "Note1", "Text" = "Note Text", "PathToFile": "pathToFile/Null", "BoardId": 1, ColumnId: 1, "OrderPlace": 1}
+        /// Req {"Name": "Note1", "Text": "Note Text", "PathToFile": null, "BoardId": 1, "ColumnId": 1, "OrderPlace": 1}
         /// Res {"message" = "ok"}
         /// </summary>
         /// <returns></returns>
@@ -129,14 +129,15 @@ namespace MyNotesApplication.Controllers
 
             User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
 
-            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.Board.Id == newNoteData.BoardId && u.Role == UserBoardRoles.OWNER.ToString()).FirstOrDefault();
+            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.BoardId == newNoteData.BoardId && u.Role == UserBoardRoles.OWNER.ToString()).FirstOrDefault();
             if (ubr == null) return Forbid();
             
-            Column? column = _columnRepository.Get(c => c.BoardId == newNoteData.BoardId).FirstOrDefault();
+
+            Column? column = _columnRepository.Get(c => c.BoardId == newNoteData.BoardId && c.Id == newNoteData.ColumnId).FirstOrDefault();
             if (column == null) return BadRequest();
 
             int notesCount = _noteRepository.Get(n => n.BoardId == newNoteData.BoardId).Count();
-            if (notesCount >= _appConfiguration.GetValue<int>("NotesLimitPerUser")) return Forbid();
+            if (notesCount > _appConfiguration.GetValue<int>("NotesLimitPerBoard")) return Forbid();
 
             Note newNote = new Note();
             newNote.Text = newNoteData.Text;
@@ -179,7 +180,7 @@ namespace MyNotesApplication.Controllers
         }
 
         /// <summary>
-        /// Req [{"Name" = "Note1", "Text" = "Note Text", "PathToFile": "pathToFile/Null", "columnId": 1}]
+        /// Req {"BoardId": 1, List:[{"id": 1, "columnId": 1, "OrderPlace": 1}, {"id": 2, "columnId": 2, "OrderPlace": 2}]}
         /// Res {"message" = "ok"}
         /// </summary>
         /// <returns></returns>
@@ -191,11 +192,13 @@ namespace MyNotesApplication.Controllers
             string username = GetUsernameFromJwtToken();
             User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
 
-            NotesData? notesData = await HttpContext.Request.ReadFromJsonAsync<NotesData>();
+            NoteOrderAndColumnUpdateDataList? notesData = await HttpContext.Request.ReadFromJsonAsync<NoteOrderAndColumnUpdateDataList>();
+            int boardId = notesData.BoardId;
+
             List<int> noteIds = new List<int>();
             //int noteId;
 
-            if (notesData == null) return NoContent();
+            Note? note = _noteRepository.GetWithInclude(n => n.BoardId == boardId).FirstOrDefault();
 
             /*
             foreach(var item in notesData.notesList)
@@ -215,7 +218,7 @@ namespace MyNotesApplication.Controllers
                 }
             }
             */
-
+            /*
             foreach(var note in notes)
             {
                 var newNote = notesData.notesList.FirstOrDefault(item => note.Id == item.id);
@@ -225,6 +228,7 @@ namespace MyNotesApplication.Controllers
             }
 
             await _noteRepository.SaveChanges();
+            */
 
             return Ok();
         }
@@ -252,6 +256,9 @@ namespace MyNotesApplication.Controllers
         
         public record NoteData(int id, string Name, string Text, string PathToFile, int ColumnId, int OrderPlace);
         public record NotesData(IEnumerable<NoteData> notesList); 
+
+        public record NoteOrderAndColumnUpdateData(int id, int ColumnId, int OrderPlace);
+        public record NoteOrderAndColumnUpdateDataList(int BoardId, List<NoteOrderAndColumnUpdateData> notes);
 
         public record NewNoteData(string Name, string Text, string PathToFile, int BoardId, int ColumnId, int OrderPlace);
     }

@@ -14,6 +14,7 @@ namespace MyNotesApplication.Controllers
         private readonly IRepository<UserBoardRole> _userBoardRoleRepository;
         private readonly IRepository<Board> _boardRepository;
         private readonly IRepository<Column> _columnRepository;
+        private readonly IRepository<Note> _notesRepository;
         private readonly ILogger<ColumnsController> _logger;
 
         public ColumnsController(
@@ -21,12 +22,14 @@ namespace MyNotesApplication.Controllers
             IRepository<UserBoardRole> userBoardRoleRepository,
             IRepository<Board> boardRepository,
             IRepository<Column> columnRepository,
+            IRepository<Note> notesRepository,
             ILogger<ColumnsController> logger)
         {
             _userRepository = userRepository;
             _userBoardRoleRepository = userBoardRoleRepository;
             _boardRepository = boardRepository;
             _columnRepository = columnRepository;
+            _notesRepository = notesRepository;
             _logger = logger;
         }
 
@@ -59,7 +62,7 @@ namespace MyNotesApplication.Controllers
         /// <returns></returns>
         [HttpGet]
         [Authorize]
-        [Route("AllColumnsFromBoard/{BoardId}")]
+        [Route("FromBoard/{BoardId}")]
         public async Task<IActionResult> GetColumnsOfBoard(int BoardId)
         {
             string username = GetUsernameFromJwtToken();
@@ -70,7 +73,8 @@ namespace MyNotesApplication.Controllers
             User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
             if(!IsUserAllowedToInteractWithBoard(user, board)) return Forbid();
 
-            List<Column> columns = _columnRepository.GetAll().Where(c => c.BoardId == BoardId).ToList();
+            List<Column> columns = _columnRepository.GetWithInclude(c => c.BoardId == BoardId).ToList();
+            List<Note> notes = _notesRepository.Get(n => n.BoardId == BoardId).ToList();
 
             return Ok(columns);
         }
