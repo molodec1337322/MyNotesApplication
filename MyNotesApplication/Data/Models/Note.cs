@@ -15,13 +15,14 @@
         public int OrderPlace { get; set; }
 
         public DateTime DateDone { get; set; }
-        public int UserId { get; set; }
-
+        
+        public int BoardId { get; set; }
         [System.Text.Json.Serialization.JsonIgnore]
-        public User User { get; set; }
+        public Board Board { get; set; }
         public int ColumnId { get; set; }
         [System.Text.Json.Serialization.JsonIgnore]
         public Column Column { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore]
         public IEnumerable<FileModel> Files { get; set; }
     }
 }

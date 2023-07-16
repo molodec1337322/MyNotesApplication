@@ -39,7 +39,7 @@ namespace MyNotesApplication.Controllers
         {
             var username = GetUsernameFromJwtToken();
 
-            if(_notesRepository.Get(NoteId).UserId != _userRepository.GetAll().FirstOrDefault(u => u.Username == username).Id) return Forbid();
+            //if(_notesRepository.Get(NoteId).UserId != _userRepository.GetAll().FirstOrDefault(u => u.Username == username).Id) return Forbid();
 
             try
             {
@@ -94,7 +94,7 @@ namespace MyNotesApplication.Controllers
 
             FileModel fileModel = _fileModelRepository.Get(FileId);
 
-            if (fileModel == null || _notesRepository.Get(fileModel.NoteId).UserId != _userRepository.GetAll().FirstOrDefault(u => u.Username == username).Id) return BadRequest();
+            //if (fileModel == null || _notesRepository.Get(fileModel.NoteId).UserId != _userRepository.GetAll().FirstOrDefault(u => u.Username == username).Id) return BadRequest();
 
             try
             {
@@ -125,7 +125,7 @@ namespace MyNotesApplication.Controllers
 
             FileModel fileModel = _fileModelRepository.Get(FileId);
 
-            if (fileModel == null || _notesRepository.Get(fileModel.NoteId)?.UserId != _userRepository.GetAll().FirstOrDefault(u => u.Username == username).Id) return BadRequest();
+            //if (fileModel == null || _notesRepository.Get(fileModel.NoteId)?.UserId != _userRepository.GetAll().FirstOrDefault(u => u.Username == username).Id) return BadRequest();
 
             try
             {

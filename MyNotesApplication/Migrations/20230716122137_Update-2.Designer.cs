@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MyNotesApplication.Migrations
 {
     [DbContext(typeof(MyDBContext))]
-    [Migration("20230204170940_Update-7")]
-    partial class Update7
+    [Migration("20230716122137_Update-2")]
+    partial class Update2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,48 @@ namespace MyNotesApplication.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("MyNotesApplication.Data.Models.Board", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Boards");
+                });
+
+            modelBuilder.Entity("MyNotesApplication.Data.Models.Column", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BoardId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("OrderPlace")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BoardId");
+
+                    b.ToTable("Columns");
+                });
 
             modelBuilder.Entity("MyNotesApplication.Data.Models.ConfirmationToken", b =>
                 {
@@ -62,10 +104,6 @@ namespace MyNotesApplication.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Format")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
@@ -74,6 +112,10 @@ namespace MyNotesApplication.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Path")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -92,8 +134,14 @@ namespace MyNotesApplication.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("BoardId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("ChangedDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ColumnId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
@@ -108,16 +156,18 @@ namespace MyNotesApplication.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("OrderPlace")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Text")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("BoardId");
+
+                    b.HasIndex("ColumnId");
 
                     b.ToTable("Notes");
                 });
@@ -150,6 +200,44 @@ namespace MyNotesApplication.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("MyNotesApplication.Data.Models.UserBoardRole", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BoardId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BoardId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserBoardRoles");
+                });
+
+            modelBuilder.Entity("MyNotesApplication.Data.Models.Column", b =>
+                {
+                    b.HasOne("MyNotesApplication.Data.Models.Board", "Board")
+                        .WithMany("Columns")
+                        .HasForeignKey("BoardId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Board");
+                });
+
             modelBuilder.Entity("MyNotesApplication.Data.Models.ConfirmationToken", b =>
                 {
                     b.HasOne("MyNotesApplication.Data.Models.User", "User")
@@ -174,13 +262,52 @@ namespace MyNotesApplication.Migrations
 
             modelBuilder.Entity("MyNotesApplication.Data.Models.Note", b =>
                 {
-                    b.HasOne("MyNotesApplication.Data.Models.User", "User")
+                    b.HasOne("MyNotesApplication.Data.Models.Board", "Board")
+                        .WithMany()
+                        .HasForeignKey("BoardId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MyNotesApplication.Data.Models.Column", "Column")
                         .WithMany("Notes")
+                        .HasForeignKey("ColumnId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Board");
+
+                    b.Navigation("Column");
+                });
+
+            modelBuilder.Entity("MyNotesApplication.Data.Models.UserBoardRole", b =>
+                {
+                    b.HasOne("MyNotesApplication.Data.Models.Board", "Board")
+                        .WithMany("UserBoardRoles")
+                        .HasForeignKey("BoardId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MyNotesApplication.Data.Models.User", "User")
+                        .WithMany("UserBoards")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Board");
+
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MyNotesApplication.Data.Models.Board", b =>
+                {
+                    b.Navigation("Columns");
+
+                    b.Navigation("UserBoardRoles");
+                });
+
+            modelBuilder.Entity("MyNotesApplication.Data.Models.Column", b =>
+                {
+                    b.Navigation("Notes");
                 });
 
             modelBuilder.Entity("MyNotesApplication.Data.Models.Note", b =>
@@ -193,7 +320,7 @@ namespace MyNotesApplication.Migrations
                     b.Navigation("ConfirmationToken")
                         .IsRequired();
 
-                    b.Navigation("Notes");
+                    b.Navigation("UserBoards");
                 });
 #pragma warning restore 612, 618
         }

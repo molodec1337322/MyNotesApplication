@@ -39,8 +39,6 @@ namespace MyNotesApplication.Controllers
         {
             AuthData? authData = await HttpContext.Request.ReadFromJsonAsync<AuthData>();
 
-            if (authData == null) return BadRequest();
-
             string email = authData.Email;
             string password = authData.Password;
 
@@ -100,8 +98,6 @@ namespace MyNotesApplication.Controllers
         {
             RegisterData? registerData = await HttpContext.Request.ReadFromJsonAsync<RegisterData>();
 
-            if (registerData == null) return BadRequest();
-
             string email = registerData.Email;
             string password = registerData.Password;
             string username = registerData.Username;
@@ -143,8 +139,6 @@ namespace MyNotesApplication.Controllers
         {
             EmailData? emailData = await HttpContext.Request.ReadFromJsonAsync<EmailData>();
 
-            if(emailData == null) return BadRequest();
-
             string email = emailData.Email;
 
             User? user = _userRepository.GetAll().FirstOrDefault(u => u.Email == email);
@@ -152,7 +146,7 @@ namespace MyNotesApplication.Controllers
             if (user == null) return BadRequest(new {message = "no user with such email"});
             if (user.EmailConfirmed) return BadRequest(new { message = "already activated" });
 
-            ConfirmationToken oldToken = _confirmationTokenRepository.GetAll().FirstOrDefault(t => t.UserId == user.Id);
+            ConfirmationToken? oldToken = _confirmationTokenRepository.GetAll().FirstOrDefault(t => t.UserId == user.Id);
             if(oldToken != null)
             {
                 _confirmationTokenRepository.Delete(oldToken);
@@ -176,7 +170,7 @@ namespace MyNotesApplication.Controllers
             ConfirmationToken? token = _confirmationTokenRepository.GetAll().FirstOrDefault(token => token.ConfirmationGUID == confirmationGuidUrl);
 
             if (token == null) return BadRequest("no such token found");
-            if (token.ExpiredDate > DateTime.UtcNow) return BadRequest("Token expired, request it again in registration form");
+            if (token.ExpiredDate < DateTime.UtcNow) return BadRequest("Token expired, request it again in registration form");
 
             User user = _userRepository.Get(token.UserId);
             user.EmailConfirmed = true;

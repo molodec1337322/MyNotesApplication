@@ -41,6 +41,9 @@ builder.Services.AddScoped<IRepository<Note>, NoteRepositoryPostgres>();
 builder.Services.AddScoped<IRepository<User>, UserRepositoryPostgres>();
 builder.Services.AddScoped<IRepository<ConfirmationToken>, ConfirmationTokenPostgres>();
 builder.Services.AddScoped<IRepository<FileModel>, FileModelRepositoryPostgres>();
+builder.Services.AddScoped<IRepository<Board>, BoardRepositoryPostgres>();
+builder.Services.AddScoped<IRepository<UserBoardRole>, UserBoardRoleRepositoryPostgres>();
+builder.Services.AddScoped<IRepository<Column>, ColumnRepositoryPostgres>();
 
 builder.Services.AddScoped<EmailService>();
 
