@@ -6,14 +6,10 @@ using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using static MyNotesApplication.Controllers.NotesController;
+using Microsoft.AspNetCore.Identity;
 
 namespace MyNotesApplication.Controllers
 {
-    /// <summary>
-    /// К ПЕРЕДЕЛКЕ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    /// </summary>
     [Route("api/v1/Notes")]
     public class NotesController : Controller
     {
@@ -51,61 +47,41 @@ namespace MyNotesApplication.Controllers
             return new JwtSecurityTokenHandler().ReadJwtToken(token).Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Name).Value;
         }
 
-        //потом затестить оба метода и чекнуть, что быстрее
-        private bool IsUserAllowedToInteractWithNote(User user, Note note, UserBoardRoles role)
+        private bool IsUserAllowedToInteractWithBoard(User user, Board board)
         {
-            DateTime timeStart = DateTime.UtcNow;
-
-            UserBoardRole? userBoardRole = _userBoardRoleRepository.GetAll().FirstOrDefault(ubr => ubr.UserId == user.Id && ubr.BoardId == 
-                _boardRepository.GetAll().FirstOrDefault(b => b.Id == 
-                _columnRepository.GetAll().FirstOrDefault(c => c.Id == note.ColumnId).BoardId).Id);
-
-            DateTime timeEnd = DateTime.UtcNow;
-            _logger.LogWarning((timeEnd - timeStart).TotalSeconds.ToString());
-
-            if (userBoardRole != null && userBoardRole.Role == role.ToString())
-            {
-                
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool IsUserAllowedToInteractWithNotes(User user, List<Note> notes, UserBoardRoles role)
-        {
-            DateTime timeStart = DateTime.UtcNow;
-
-            Note firstNote = notes[0];
-            Board board = _boardRepository.Get(_columnRepository.Get(firstNote.ColumnId).BoardId);
-            UserBoardRole? ubr = _userBoardRoleRepository.GetAll().FirstOrDefault(u => u.BoardId == board.Id && u.UserId == user.Id && u.Role == role.ToString());
-
-            if(ubr == null) return false;
-
-            List<Column> columns = _columnRepository.GetAll().Where(c => c.BoardId == board.Id).ToList();
-            List<Note> allNotesInBoard = new List<Note>();
-            foreach (var col in columns)
-            {
-                List<Note> tmpNotes = _noteRepository.GetAll().Where(n => n.ColumnId == col.Id).ToList();
-                foreach(var n in tmpNotes)
-                {
-                    allNotesInBoard.Add(n);
-                }
-                
-            }
-
-            if (allNotesInBoard.Count != notes.Count) return false;
-
-            DateTime timeEnd = DateTime.UtcNow;
-            _logger.LogWarning((timeEnd - timeStart).TotalSeconds.ToString());
-
-            foreach (var trustedNote in allNotesInBoard)
-            {
-                if(!notes.Contains(trustedNote)) return false;
-            }
-
+            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.BoardId == board.Id).FirstOrDefault();
+            if (ubr == null) return false;
             return true;
         }
+
+        private bool IsUserAllowedToInteractWithBoard(User user, Board board, UserBoardRoles role)
+        {
+            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.BoardId == board.Id && u.Role == role.ToString()).FirstOrDefault();
+            if (ubr == null) return false;
+            return true;
+        }
+
+        private bool IsUserAllowedToInteractWithNote(User user, Note note)
+        {
+            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.BoardId == note.BoardId).FirstOrDefault();
+            if(ubr == null) return false;
+            return true;
+        }
+
+        private bool IsUserAllowedToInteractWithNote(User user, Note note, UserBoardRoles role)
+        {
+            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.BoardId == note.BoardId && u.Role == UserBoardRoles.OWNER.ToString()).FirstOrDefault();
+            if (ubr == null) return false;
+            return true;
+        }
+
+        private bool IsColumnExists(int columnId, int boardId)
+        {
+            Column? column = _columnRepository.Get(c => c.BoardId == boardId && c.Id == columnId).FirstOrDefault();
+            if(column == null) return false;
+            return true;
+        }
+
 
         [HttpGet]
         [Route("GetLimit")]
@@ -129,22 +105,19 @@ namespace MyNotesApplication.Controllers
 
             User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
 
-            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.BoardId == newNoteData.BoardId && u.Role == UserBoardRoles.OWNER.ToString()).FirstOrDefault();
-            if (ubr == null) return Forbid();
-            
+            Note newNote = new Note();
+            newNote.BoardId = newNoteData.BoardId;
+            newNote.ColumnId = newNoteData.ColumnId;
 
-            Column? column = _columnRepository.Get(c => c.BoardId == newNoteData.BoardId && c.Id == newNoteData.ColumnId).FirstOrDefault();
-            if (column == null) return BadRequest();
+            if (!IsUserAllowedToInteractWithNote(user, newNote, UserBoardRoles.OWNER)) return Forbid();
+            if (!IsColumnExists(newNote.ColumnId, newNote.BoardId)) return BadRequest();
 
             int notesCount = _noteRepository.Get(n => n.BoardId == newNoteData.BoardId).Count();
             if (notesCount > _appConfiguration.GetValue<int>("NotesLimitPerBoard")) return Forbid();
 
-            Note newNote = new Note();
             newNote.Text = newNoteData.Text;
             newNote.Name = newNoteData.Name;
             newNote.CreatedDate = DateTime.UtcNow;
-            newNote.BoardId = newNoteData.BoardId;
-            newNote.ColumnId = newNoteData.ColumnId;
             newNote.OrderPlace = newNoteData.OrderPlace;
 
             Note note = _noteRepository.Add(newNote);
@@ -160,15 +133,17 @@ namespace MyNotesApplication.Controllers
             string username = GetUsernameFromJwtToken();
             NoteData? updatedNoteData = await HttpContext.Request.ReadFromJsonAsync<NoteData>();
 
-            User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
+            User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault(u => u.Username == username);
+
             Note? note = _noteRepository.Get(NoteId);
+            if(note == null) return BadRequest();
 
-            if(note == null) return NoContent();
+            note.ColumnId = updatedNoteData.ColumnId;
 
-            if(updatedNoteData == null) return NotFound();
+            if (!IsUserAllowedToInteractWithNote(user, note, UserBoardRoles.OWNER)) return Forbid();
+            if (!IsColumnExists(note.ColumnId, note.BoardId)) return BadRequest();
 
-            //if(note.UserId != user.Id) return Forbid();
-
+            note.OrderPlace = updatedNoteData.OrderPlace;
             note.Name = updatedNoteData.Name;
             note.Text = updatedNoteData.Text;
             note.ChangedDate = DateTime.UtcNow;
@@ -180,57 +155,54 @@ namespace MyNotesApplication.Controllers
         }
 
         /// <summary>
-        /// Req {"BoardId": 1, List:[{"id": 1, "columnId": 1, "OrderPlace": 1}, {"id": 2, "columnId": 2, "OrderPlace": 2}]}
+        /// Req {"BoardId": 1, "notes":[{"id": 1, "columnId": 1, "OrderPlace": 1}, {"id": 2, "columnId": 2, "OrderPlace": 2}]}
         /// Res {"message" = "ok"}
         /// </summary>
         /// <returns></returns>
         [HttpPut]
         [Authorize]
-        [Route("Update")]
+        [Route("UpdatePlacement")]
         public async Task<IActionResult> UpdateNotes()
         {
             string username = GetUsernameFromJwtToken();
             User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
+            
 
             NoteOrderAndColumnUpdateDataList? notesData = await HttpContext.Request.ReadFromJsonAsync<NoteOrderAndColumnUpdateDataList>();
-            int boardId = notesData.BoardId;
 
-            List<int> noteIds = new List<int>();
-            //int noteId;
+            Board? board = _boardRepository.Get(notesData.BoardId);
 
-            Note? note = _noteRepository.GetWithInclude(n => n.BoardId == boardId).FirstOrDefault();
+            if (!IsUserAllowedToInteractWithBoard(user, board, UserBoardRoles.OWNER)) return Forbid();
 
-            /*
-            foreach(var item in notesData.notesList)
+            List<NoteOrderAndColumnUpdateData> notesDataList = notesData.notes;
+            List<Note> notesToUpdate = new List<Note>();
+            List<Column> columns = new List<Column>();
+            foreach (var noteData in notesDataList)
             {
-                noteIds.Add(item.id);
-            }
-            */
+                Note? note = _noteRepository.Get(n => n.Id == noteData.id && n.BoardId == board.Id).FirstOrDefault();
 
-            List<Note> notes = _noteRepository.GetAll().Where(item => noteIds.Contains(item.Id)).ToList();
-
-            if (!IsUserAllowedToInteractWithNotes(user, notes, UserBoardRoles.OWNER)) return Forbid();
-            /*
-            foreach(var note in notes){
-                if(IsUserAllowedToInteractWithNote(user, note, UserBoardRoles.GUEST))
+                Column? column = columns.FirstOrDefault(c => c.Id == noteData.ColumnId && c.BoardId == board.Id);
+                if (column == null)
                 {
-                    return Forbid();
+                    column = _columnRepository.Get(c => c.Id == noteData.ColumnId && c.BoardId == board.Id).FirstOrDefault();
+                    if (column == null) return BadRequest();
+                    columns.Add(column);
                 }
+                if (note == null) return BadRequest();
+
+                notesToUpdate.Add(note);
             }
-            */
-            /*
-            foreach(var note in notes)
+
+            for(int i = 0; i < notesToUpdate.Count; i++)
             {
-                var newNote = notesData.notesList.FirstOrDefault(item => note.Id == item.id);
-                note.OrderPlace = newNote.OrderPlace;
-                note.ColumnId = newNote.ColumnId;
-                _noteRepository.Update(note);
+                notesToUpdate[i].ColumnId = notesDataList[i].ColumnId;
+                notesToUpdate[i].Column = columns.FirstOrDefault(c => c.Id == notesDataList[i].ColumnId);
+                notesToUpdate[i].OrderPlace = notesDataList[i].OrderPlace;
+
+                _noteRepository.Update(notesToUpdate[i]);
             }
 
-            await _noteRepository.SaveChanges();
-            */
-
-            return Ok();
+            return Ok(notesToUpdate);
         }
 
         [HttpDelete]
@@ -241,15 +213,13 @@ namespace MyNotesApplication.Controllers
             string username = GetUsernameFromJwtToken();
             NoteData? updatedNoteData = await HttpContext.Request.ReadFromJsonAsync<NoteData>();
 
-            User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
+            User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
             Note? note = _noteRepository.Get(NoteId);
 
-            if(note == null) return NoContent();
-
-            //if (note.UserId != user.Id) return Forbid();
+            if (note == null) return BadRequest();
+            if (!IsUserAllowedToInteractWithNote(user, note, UserBoardRoles.OWNER)) return Forbid();
 
             _noteRepository.Delete(note);
-            await _noteRepository.SaveChanges();
 
             return Ok(new { message = "deleted", NoteId = NoteId });
         }
