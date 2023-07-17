@@ -47,30 +47,30 @@ namespace MyNotesApplication.Controllers
             return new JwtSecurityTokenHandler().ReadJwtToken(token).Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Name).Value;
         }
 
-        private bool IsUserAllowedToInteractWithBoard(User user, Board board)
+        private bool IsUserAllowedToInteractWithBoard(int userId, int boardId)
         {
-            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.BoardId == board.Id).FirstOrDefault();
+            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == userId && u.BoardId == boardId).FirstOrDefault();
             if (ubr == null) return false;
             return true;
         }
 
-        private bool IsUserAllowedToInteractWithBoard(User user, Board board, UserBoardRoles role)
+        private bool IsUserAllowedToInteractWithBoard(int userId, int boardId, UserBoardRoles role)
         {
-            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.BoardId == board.Id && u.Role == role.ToString()).FirstOrDefault();
+            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == userId && u.BoardId == boardId && u.Role == role.ToString()).FirstOrDefault();
             if (ubr == null) return false;
             return true;
         }
 
-        private bool IsUserAllowedToInteractWithNote(User user, Note note)
+        private bool IsUserAllowedToInteractWithNote(int userId, int noteBoardId)
         {
-            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.BoardId == note.BoardId).FirstOrDefault();
+            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == userId && u.BoardId == noteBoardId).FirstOrDefault();
             if(ubr == null) return false;
             return true;
         }
 
-        private bool IsUserAllowedToInteractWithNote(User user, Note note, UserBoardRoles role)
+        private bool IsUserAllowedToInteractWithNote(int userId, int noteBoardId, UserBoardRoles role)
         {
-            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.BoardId == note.BoardId && u.Role == UserBoardRoles.OWNER.ToString()).FirstOrDefault();
+            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == userId && u.BoardId == noteBoardId && u.Role == UserBoardRoles.OWNER.ToString()).FirstOrDefault();
             if (ubr == null) return false;
             return true;
         }
@@ -166,13 +166,12 @@ namespace MyNotesApplication.Controllers
         {
             string username = GetUsernameFromJwtToken();
             User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
-            
 
             NoteOrderAndColumnUpdateDataList? notesData = await HttpContext.Request.ReadFromJsonAsync<NoteOrderAndColumnUpdateDataList>();
 
             Board? board = _boardRepository.Get(notesData.BoardId);
 
-            if (!IsUserAllowedToInteractWithBoard(user, board, UserBoardRoles.OWNER)) return Forbid();
+            if (!IsUserAllowedToInteractWithBoard(user.Id, board.Id, UserBoardRoles.OWNER)) return Forbid();
 
             List<NoteOrderAndColumnUpdateData> notesDataList = notesData.notes;
             List<Note> notesToUpdate = new List<Note>();

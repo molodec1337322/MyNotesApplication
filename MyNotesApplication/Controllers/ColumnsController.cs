@@ -111,10 +111,22 @@ namespace MyNotesApplication.Controllers
 
         [HttpDelete]
         [Authorize]
-        [Route("Delete/{ColumnId}")]
-        public async Task<IActionResult> Delete()
+        [Route("Delete/{columnId}")]
+        public async Task<IActionResult> Delete(int columnId)
         {
-            return Ok();
+            string username = GetUsernameFromJwtToken();
+
+            User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
+
+            Column? column = _columnRepository.Get(columnId);
+            if (column == null) return BadRequest();
+
+            Board? board = _boardRepository.Get(column.BoardId);
+            if (!IsUserAllowedToInteractWithBoard(user, board, UserBoardRoles.OWNER)) return Forbid();
+
+            _columnRepository.Delete(column);
+
+            return Ok(new {message = "deleted", ColumnId = columnId});
         }
 
         [HttpPut]
