@@ -38,16 +38,16 @@ namespace MyNotesApplication.Controllers
             return new JwtSecurityTokenHandler().ReadJwtToken(token).Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Name).Value;
         }
 
-        private bool IsUserAllowedToInteractWithBoard(int userId, int boardId)
+        private bool IsUserAllowedToInteractWithBoard(User user, Board board)
         {
-            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == userId && u.BoardId == boardId).FirstOrDefault();
+            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.BoardId == board.Id).FirstOrDefault();
             if (ubr == null) return false;
             return true;
         }
 
-        private bool IsUserAllowedToInteractWithBoard(int userId, int boardId, UserBoardRoles role)
+        private bool IsUserAllowedToInteractWithBoard(User user, Board board, UserBoardRoles role)
         {
-            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == userId && u.BoardId == boardId && u.Role == role.ToString()).FirstOrDefault();
+            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.BoardId == board.Id && u.Role == role.ToString()).FirstOrDefault();
             if (ubr == null) return false;
             return true;
         }
@@ -86,7 +86,7 @@ namespace MyNotesApplication.Controllers
             if (board == null) return NotFound();
 
             User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
-            if (!IsUserAllowedToInteractWithBoard(user.Id, board.Id)) return Forbid();
+            if (!IsUserAllowedToInteractWithBoard(user, board)) return Forbid();
 
             return Ok(board);
         }
