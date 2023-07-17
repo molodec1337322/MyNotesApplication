@@ -29,7 +29,7 @@ namespace MyNotesApplication.Data.Repository
             return true;
         }
 
-        public Column Get(int id) => _myDbContext.Columns.FirstOrDefault(x => x.Id == id);
+        public Column Get(int id) => _myDbContext.Columns.Find(id);
 
         public IEnumerable<Column> GetAll() => _myDbContext.Columns.ToList();
 

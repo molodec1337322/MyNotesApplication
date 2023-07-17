@@ -16,6 +16,7 @@ namespace MyNotesApplication.Data
         public DbSet<ConfirmationToken> ConfirmationTokens { get; set; }
         public DbSet<FileModel> FileModels { get; set; }
         public DbSet<UserBoardRole> UserBoardRoles { get; set; }
+        public DbSet<InvitationToken> InvitationTokens { get; set;}
         
     }
 }

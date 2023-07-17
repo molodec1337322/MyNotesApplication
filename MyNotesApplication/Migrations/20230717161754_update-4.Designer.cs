@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MyNotesApplication.Migrations
 {
     [DbContext(typeof(MyDBContext))]
-    [Migration("20230716122137_Update-2")]
-    partial class Update2
+    [Migration("20230717161754_update-4")]
+    partial class update4
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -124,6 +124,39 @@ namespace MyNotesApplication.Migrations
                     b.HasIndex("NoteId");
 
                     b.ToTable("FileModels");
+                });
+
+            modelBuilder.Entity("MyNotesApplication.Data.Models.InvitationToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BoardId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpirationTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("InvitationGUID")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BoardId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("InvitationTokens");
                 });
 
             modelBuilder.Entity("MyNotesApplication.Data.Models.Note", b =>
@@ -260,10 +293,29 @@ namespace MyNotesApplication.Migrations
                     b.Navigation("Note");
                 });
 
+            modelBuilder.Entity("MyNotesApplication.Data.Models.InvitationToken", b =>
+                {
+                    b.HasOne("MyNotesApplication.Data.Models.Board", "Board")
+                        .WithMany("InvitationTokens")
+                        .HasForeignKey("BoardId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MyNotesApplication.Data.Models.User", "User")
+                        .WithMany("InvitationTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Board");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("MyNotesApplication.Data.Models.Note", b =>
                 {
                     b.HasOne("MyNotesApplication.Data.Models.Board", "Board")
-                        .WithMany()
+                        .WithMany("Notes")
                         .HasForeignKey("BoardId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -302,6 +354,10 @@ namespace MyNotesApplication.Migrations
                 {
                     b.Navigation("Columns");
 
+                    b.Navigation("InvitationTokens");
+
+                    b.Navigation("Notes");
+
                     b.Navigation("UserBoardRoles");
                 });
 
@@ -319,6 +375,8 @@ namespace MyNotesApplication.Migrations
                 {
                     b.Navigation("ConfirmationToken")
                         .IsRequired();
+
+                    b.Navigation("InvitationTokens");
 
                     b.Navigation("UserBoards");
                 });

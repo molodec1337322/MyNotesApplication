@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MyNotesApplication.Data.Interfaces;
 using MyNotesApplication.Data.Models;
+using MyNotesApplication.Services;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using static MyNotesApplication.Controllers.NotesController;
@@ -14,7 +15,8 @@ namespace MyNotesApplication.Controllers
         private readonly IRepository<User> _userRepository;
         private readonly IRepository<UserBoardRole> _userBoardRoleRepository;
         private readonly IRepository<Board> _boardRepository;
-        private readonly IRepository<Column> _columnRepository;
+        private readonly IRepository<InvitationToken> _invitationTokenRepository;
+        private readonly IConfiguration _appConfiguration;
         private readonly ILogger<BoardsController> _logger;
 
         public BoardsController(
@@ -22,12 +24,15 @@ namespace MyNotesApplication.Controllers
             IRepository<UserBoardRole> userBoardRoleRepository, 
             IRepository<Board> boardRepository, 
             IRepository<Column> columnRepository, 
+            IRepository<InvitationToken> invitationTokenRepository,
+            IConfiguration configuration,
             ILogger<BoardsController> logger) 
         { 
             _userRepository = userRepository;
             _userBoardRoleRepository = userBoardRoleRepository;
             _boardRepository = boardRepository;
-            _columnRepository = columnRepository;
+            _invitationTokenRepository = invitationTokenRepository;
+            _appConfiguration = configuration;
             _logger = logger;
         }
 
@@ -122,17 +127,81 @@ namespace MyNotesApplication.Controllers
             return Ok(board);
         }
 
+        /// <summary>
+        /// req {"Email": "comcom@com.com"}
+        /// res {}
+        /// </summary>
+        /// <param name="boardId"></param>
+        /// <returns></returns>
         [HttpPost]
         [Authorize]
-        [Route("AddGuest/{BoardId}")]
-        public async Task<IActionResult> AddGuest()
+        [Route("AddUserAsGuest/{BoardId}")]
+        public async Task<IActionResult> AddGuest(int boardId)
         {
+            string username = GetUsernameFromJwtToken();
+
+            UserToInviteData? userToInviteData = await HttpContext.Request.ReadFromJsonAsync<UserToInviteData>();
+
+            User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
+            if (user.Email == userToInviteData.Email) return Conflict();
+
+            User? userToInvite = _userRepository.Get(u => u.Email == userToInviteData.Email).FirstOrDefault();
+            if(userToInvite == null) return BadRequest();
+
+            Board? board = _boardRepository.Get(boardId);
+
+            if (board == null) return BadRequest();
+            if (!IsUserAllowedToInteractWithBoard(user, board, UserBoardRoles.OWNER)) return Forbid();
+
+            InvitationToken createdToken = new InvitationToken();
+            createdToken.UserId = userToInvite.Id;
+            createdToken.User = userToInvite;
+            createdToken.BoardId = boardId;
+            createdToken.Board = board;
+            createdToken.CreatedDate = DateTime.UtcNow;
+            createdToken.ExpirationTime = DateTime.UtcNow.AddHours(72);
+            createdToken.InvitationGUID = Guid.NewGuid().ToString();
+
+            _invitationTokenRepository.Update(createdToken);
+
+            var emailService = new EmailService(_appConfiguration);
+            var invitationUrl = Url.Action("ConfirmInvitation", "Boards", new { invitationGUID = createdToken.InvitationGUID }, protocol: HttpContext.Request.Scheme);
+            await emailService.SendEmailAsync(userToInvite.Email, "Приглашение на доску в качестве участника", $"Вы были приглашашены на доску в качестве участника пользователем {user.Username}. Перейдите по ссылке, чтобы стать участником: <a href='{invitationUrl}'>Подтвердить</a>");
+
             return Ok();
+        }
+
+        [HttpGet]
+        [Route("ConfirmInvitation/{invitationGUID}")]
+        public async Task<IActionResult> ConfirmInvitation(string invitationGUID)
+        {
+            InvitationToken? token = _invitationTokenRepository.Get(i => i.InvitationGUID == invitationGUID).FirstOrDefault();
+
+            if (token == null) return BadRequest("no such token found");
+            if (token.ExpirationTime < DateTime.UtcNow) return BadRequest("Token expired, request it again in registration form");
+
+            UserBoardRole newUbr = new UserBoardRole();
+            newUbr.BoardId = token.BoardId;
+            newUbr.UserId = token.UserId;
+            newUbr.User = token.User;
+            newUbr.Board = token.Board;
+            newUbr.Role = UserBoardRoles.GUEST.ToString();
+
+
+            _userBoardRoleRepository.Add(newUbr);
+
+            List<InvitationToken> tokensToDelete = _invitationTokenRepository.Get(t => t.UserId == token.UserId).ToList();
+            foreach(var tokenToDelete in tokensToDelete)
+            {
+                _invitationTokenRepository.Delete(tokenToDelete);
+            }
+
+            return Redirect(_appConfiguration.GetValue<string>("FrontRedirectUrl"));
         }
 
         [HttpPut]
         [Authorize]
-        [Route("AddOwner/{BoardId}")]
+        [Route("ChangeRole/{BoardId}")]
         public async Task<IActionResult> AddOwner()
         {
             return Ok();
@@ -148,7 +217,10 @@ namespace MyNotesApplication.Controllers
 
         public record BoardData(int id, string Name);
 
-
         public record NewBoardData(string Name);
+
+        public record UserToInviteData(string Email);
+
+        public record UserChangeRoleData(int userId, string role);
     }
 }

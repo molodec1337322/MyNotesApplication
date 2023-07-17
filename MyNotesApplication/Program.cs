@@ -44,6 +44,7 @@ builder.Services.AddScoped<IRepository<FileModel>, FileModelRepositoryPostgres>(
 builder.Services.AddScoped<IRepository<Board>, BoardRepositoryPostgres>();
 builder.Services.AddScoped<IRepository<UserBoardRole>, UserBoardRoleRepositoryPostgres>();
 builder.Services.AddScoped<IRepository<Column>, ColumnRepositoryPostgres>();
+builder.Services.AddScoped<IRepository<InvitationToken>, InvitationTokenRepositoryPostgres>();
 
 builder.Services.AddScoped<EmailService>();
 

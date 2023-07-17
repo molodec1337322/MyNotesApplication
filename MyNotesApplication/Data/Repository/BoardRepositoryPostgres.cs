@@ -28,7 +28,7 @@ namespace MyNotesApplication.Data.Repository
             return true;
         }
 
-        public Board Get(int id) => _myDbContext.Boards.FirstOrDefault(x => x.Id == id);
+        public Board Get(int id) => _myDbContext.Boards.Find(id);
 
         public IEnumerable<Board> GetAll() => _myDbContext.Boards.ToList();
 

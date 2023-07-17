@@ -14,5 +14,6 @@ namespace MyNotesApplication.Data.Models
         public IEnumerable<UserBoardRole> UserBoards { get; set; }
 
         public ConfirmationToken ConfirmationToken { get; set; }
+        public IEnumerable<InvitationToken> InvitationTokens { get; set;}
     }
 }
