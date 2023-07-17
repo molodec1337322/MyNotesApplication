@@ -68,3 +68,5 @@ C:\Users\Molodec\source\repos\MyNotesApplication\MyNotesApplication\bin\Debug\ne
 C:\Users\Molodec\source\repos\MyNotesApplication\MyNotesApplication\bin\Debug\net6.0\MyNotesApplication.staticwebassets.runtime.json
 C:\Users\Molodec\source\repos\MyNotesApplication\MyNotesApplication\bin\Debug\net6.0\Microsoft.AspNetCore.Authentication.Google.dll
 C:\Users\Molodec\source\repos\MyNotesApplication\MyNotesApplication\bin\Debug\net6.0\client_secret.json
+C:\Users\Molodec\source\repos\MyNotesApplication\MyNotesApplication\bin\Debug\net6.0\RabbitMQ.Client.dll
+C:\Users\Molodec\source\repos\MyNotesApplication\MyNotesApplication\bin\Debug\net6.0\System.Threading.Channels.dll
