@@ -15,6 +15,7 @@
           "Microsoft.EntityFrameworkCore": "7.0.2",
           "Microsoft.EntityFrameworkCore.Tools": "7.0.2",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "7.0.1",
+          "Polly": "7.2.4",
           "RabbitMQ.Client": "6.5.0"
         },
         "runtime": {
@@ -387,6 +388,14 @@
           }
         }
       },
+      "Polly/7.2.4": {
+        "runtime": {
+          "lib/netstandard2.0/Polly.dll": {
+            "assemblyVersion": "7.0.0.0",
+            "fileVersion": "7.2.4.982"
+          }
+        }
+      },
       "Portable.BouncyCastle/1.9.0": {
         "runtime": {
           "lib/netstandard2.0/BouncyCastle.Crypto.dll": {
@@ -725,6 +734,13 @@
       "sha512": "sha512-8txq2CsPWvWO4azZSBmKLKmYsL6dkGrarX2hJZY0Djx6uWZJGH9W0OTE1oHqn+aC5L+xrzyS+TM3kiKw2gdXuA==",
       "path": "npgsql.entityframeworkcore.postgresql/7.0.1",
       "hashPath": "npgsql.entityframeworkcore.postgresql.7.0.1.nupkg.sha512"
+    },
+    "Polly/7.2.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-bw00Ck5sh6ekduDE3mnCo1ohzuad946uslCDEENu3091+6UKnBuKLo4e+yaNcCzXxOZCXWY2gV4a35+K1d4LDA==",
+      "path": "polly/7.2.4",
+      "hashPath": "polly.7.2.4.nupkg.sha512"
     },
     "Portable.BouncyCastle/1.9.0": {
       "type": "package",

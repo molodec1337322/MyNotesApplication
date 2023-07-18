@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "pvn/E8R4iB7YmiavEyXamkKt/om/kT7zft7bnYO4U+W/uEaMT8EF1AdGui5wsl00uVXcQ/dztgCtnHq/I0O1AA==",
+  "dgSpecHash": "zfjL2buBatKXL/FEmkEyx90HsO4YG6o6evWrSwgMb91PUbefW6ovXLlH7Q1qRqtLSAYrHRb+Ofym05pa8nYjPw==",
   "success": true,
   "projectFilePath": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\MyNotesApplication.csproj",
   "expectedPackageFiles": [
@@ -38,6 +38,7 @@
     "C:\\Users\\Molodec\\.nuget\\packages\\mono.texttemplating\\2.2.1\\mono.texttemplating.2.2.1.nupkg.sha512",
     "C:\\Users\\Molodec\\.nuget\\packages\\npgsql\\7.0.1\\npgsql.7.0.1.nupkg.sha512",
     "C:\\Users\\Molodec\\.nuget\\packages\\npgsql.entityframeworkcore.postgresql\\7.0.1\\npgsql.entityframeworkcore.postgresql.7.0.1.nupkg.sha512",
+    "C:\\Users\\Molodec\\.nuget\\packages\\polly\\7.2.4\\polly.7.2.4.nupkg.sha512",
     "C:\\Users\\Molodec\\.nuget\\packages\\portable.bouncycastle\\1.9.0\\portable.bouncycastle.1.9.0.nupkg.sha512",
     "C:\\Users\\Molodec\\.nuget\\packages\\rabbitmq.client\\6.5.0\\rabbitmq.client.6.5.0.nupkg.sha512",
     "C:\\Users\\Molodec\\.nuget\\packages\\system.codedom\\4.4.0\\system.codedom.4.4.0.nupkg.sha512",
