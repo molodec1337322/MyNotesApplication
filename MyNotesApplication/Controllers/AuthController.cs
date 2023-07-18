@@ -11,6 +11,8 @@ using MyNotesApplication.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Caching.Distributed;
 using MyNotesApplication.Data;
+using MyNotesApplication.Services.Interfaces;
+using MyNotesApplication.Services.RabbitMQBroker.Messages;
 
 namespace MyNotesApplication.Controllers
 {
@@ -20,16 +22,16 @@ namespace MyNotesApplication.Controllers
         private readonly IRepository<User> _userRepository;
         private readonly IRepository<ConfirmationToken> _confirmationTokenRepository;
         private readonly IConfiguration _appConfiguration;
+        private readonly IMessageBroker _messageBroker;
         private readonly ILogger<AuthController> _logger;
-        private readonly MyDBContext _dbContext;
 
-        public AuthController(IRepository<User> userRepo, IRepository<ConfirmationToken> confirmationTokenRepo, IConfiguration appConfiguration, ILogger<AuthController> logger, MyDBContext dbContext)
+        public AuthController(IRepository<User> userRepo, IRepository<ConfirmationToken> confirmationTokenRepo, IConfiguration appConfiguration, IMessageBroker messageBroker, ILogger<AuthController> logger)
         {
             _userRepository = userRepo;
             _confirmationTokenRepository = confirmationTokenRepo;
             _appConfiguration = appConfiguration;
+            _messageBroker = messageBroker;
             _logger = logger;
-            _dbContext = dbContext;
         }
 
         /// <summary>
@@ -157,6 +159,8 @@ namespace MyNotesApplication.Controllers
             ConfirmationToken newToken = _confirmationTokenRepository.Add(GenerateNewRegistrationToken(user));
             await _confirmationTokenRepository.SaveChanges();
 
+
+
             var emailService = new EmailService(_appConfiguration);
             var confirmationUrl = Url.Action("EmailConfirm", "Auth", new { confirmationGuidUrl = newToken.ConfirmationGUID }, protocol: HttpContext.Request.Scheme);
             await emailService.SendEmailAsync(user.Email, "Подтвердите свою почту", $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confirmationUrl}'>Подтвердить</a>");
@@ -181,6 +185,15 @@ namespace MyNotesApplication.Controllers
 
 
             return Redirect(_appConfiguration.GetValue<string>("FrontRedirectUrl"));
+        }
+
+        [HttpGet]
+        [Route("Test")]
+        public async Task<IActionResult> BrokerTest()
+        {
+            var message = new SendEmailMessage("123@123", "Subject", "body");
+            _messageBroker.SendMessage(message);
+            return Ok();
         }
 
         public record AuthData(string Email, string Password);

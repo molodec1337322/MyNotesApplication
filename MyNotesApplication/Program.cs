@@ -50,7 +50,6 @@ builder.Services.AddScoped<IRepository<Column>, ColumnRepositoryPostgres>();
 builder.Services.AddScoped<IRepository<InvitationToken>, InvitationTokenRepositoryPostgres>();
 
 builder.Services.AddScoped<EmailService>();
-builder.Services.AddScoped<IConnectionFactory, ConnectionFactory>();
 builder.Services.AddScoped<IMessageBrokerPersistentConnection, PersistentConnectionRabbitMQ>();
 builder.Services.AddScoped<IMessageBroker, MessageBrokerRabbitMQ>();
 

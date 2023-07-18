@@ -16,41 +16,46 @@ namespace MyNotesApplication.Services.RabbitMQBroker
         private IConnection _connection;
         private bool _disposed;
 
-        public PersistentConnectionRabbitMQ(IConnectionFactory connectionFactory, IConfiguration configuration, ILogger<PersistentConnectionRabbitMQ> logger)
+        object sync_root = new object();
+
+        public PersistentConnectionRabbitMQ(IConfiguration configuration, ILogger<PersistentConnectionRabbitMQ> logger)
         {
-            _connectionFactory = connectionFactory;
+            _connectionFactory = new ConnectionFactory() { HostName = configuration.GetValue<string>("RabbitMQHostAddress") };
             _configuration = configuration;
             _logger = logger;
         }
 
-        public bool IsConnected => _connection != null && _connection.IsOpen && _disposed;
+        public bool IsConnected => _connection != null && _connection.IsOpen && !_disposed;
 
         public bool TryConnect()
         {
-            var policy = Policy.Handle<SocketException>()
+            lock(sync_root)
+            {
+                var policy = Policy.Handle<SocketException>()
                 .Or<BrokerUnreachableException>()
                 .WaitAndRetry(_configuration.GetValue<int>("ConnectionsRetry"), retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
-            {
-                _logger.LogWarning(ex, ex.Message);
-            });
+                {
+                    _logger.LogWarning(ex, ex.Message);
+                });
 
-            policy.Execute(() =>
-            {
-                _connection = _connectionFactory.CreateConnection();
-            });
+                policy.Execute(() =>
+                {
+                    _connection = _connectionFactory.CreateConnection();
+                });
 
-            if (IsConnected)
-            {
-                _connection.CallbackException += OnExceptionCallback;
-                _connection.ConnectionShutdown += OnShutdownConnection;
-                _connection.ConnectionBlocked += OnBlockedConnection;
+                if (IsConnected)
+                {
+                    _connection.CallbackException += OnExceptionCallback;
+                    _connection.ConnectionShutdown += OnShutdownConnection;
+                    _connection.ConnectionBlocked += OnBlockedConnection;
 
-                _logger.LogInformation($"RabbitMQ Client acquired a persistent connection to '{_connection.Endpoint.HostName}' and is subscribed to failure events");
+                    _logger.LogInformation($"RabbitMQ Client acquired a persistent connection to '{_connection.Endpoint.HostName}' and is subscribed to failure events");
 
-                return true;
+                    return true;
+                }
+                _logger.LogCritical("FATAL ERROR: cant create RabbitMQ connection");
+                return false;
             }
-            _logger.LogCritical("FATAL ERROR: cant create RabbitMQ connection");
-            return false;
         }
 
         private void OnExceptionCallback(object sender, CallbackExceptionEventArgs e)
