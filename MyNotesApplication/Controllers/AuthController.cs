@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using MyNotesApplication.Data.Interfaces;
@@ -9,10 +7,10 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using MyNotesApplication.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Caching.Distributed;
-using MyNotesApplication.Data;
 using MyNotesApplication.Services.Interfaces;
 using MyNotesApplication.Services.RabbitMQBroker.Messages;
+using MyNotesApplication.Services.Message;
+using System.Text.Json;
 
 namespace MyNotesApplication.Controllers
 {
@@ -159,8 +157,6 @@ namespace MyNotesApplication.Controllers
             ConfirmationToken newToken = _confirmationTokenRepository.Add(GenerateNewRegistrationToken(user));
             await _confirmationTokenRepository.SaveChanges();
 
-
-
             var emailService = new EmailService(_appConfiguration);
             var confirmationUrl = Url.Action("EmailConfirm", "Auth", new { confirmationGuidUrl = newToken.ConfirmationGUID }, protocol: HttpContext.Request.Scheme);
             await emailService.SendEmailAsync(user.Email, "Подтвердите свою почту", $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confirmationUrl}'>Подтвердить</a>");
@@ -183,7 +179,6 @@ namespace MyNotesApplication.Controllers
             _confirmationTokenRepository.Delete(token);
             _userRepository.Update(user);
 
-
             return Redirect(_appConfiguration.GetValue<string>("FrontRedirectUrl"));
         }
 
@@ -191,7 +186,9 @@ namespace MyNotesApplication.Controllers
         [Route("Test")]
         public async Task<IActionResult> BrokerTest()
         {
-            var message = new SendEmailMessage("123@123", "Subject", "body");
+            var payloadMessage = new SendEmailMessage("123@123", "Subject", "body");
+            var JSONPayloadMessage = JsonSerializer.Serialize(payloadMessage).ToString();
+            var message = new MessageWithJSONPayload(_appConfiguration.GetValue<string>("BrokerEmailServiceName"), JSONPayloadMessage);
             _messageBroker.SendMessage(message);
             return Ok();
         }

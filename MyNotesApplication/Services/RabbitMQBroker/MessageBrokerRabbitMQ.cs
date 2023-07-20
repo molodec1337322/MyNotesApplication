@@ -1,5 +1,5 @@
-﻿using MyNotesApplication.Services.Abstractions;
-using MyNotesApplication.Services.Interfaces;
+﻿using MyNotesApplication.Services.Interfaces;
+using MyNotesApplication.Services.Message;
 using Polly;
 using Polly.Retry;
 using RabbitMQ.Client;
@@ -24,7 +24,7 @@ namespace MyNotesApplication.Services.RabbitMQBroker
             _logger = logger;
         }
 
-        public void SendMessage(Message message)
+        public void SendMessage(MessageWithJSONPayload message)
         {
             if (!_persistentConnection.IsConnected) _persistentConnection.TryConnect();
 
@@ -34,8 +34,6 @@ namespace MyNotesApplication.Services.RabbitMQBroker
                 {
                     _logger.LogWarning(ex, ex.Message);
                 });
-
-            var messageName = message.GetType().Name;
 
             using (var channel = _persistentConnection.CreateModel())
             {
@@ -52,13 +50,12 @@ namespace MyNotesApplication.Services.RabbitMQBroker
 
                 policy.Execute(() =>
                 {
-                    var props = channel.CreateBasicProperties();
+                    //var props = channel.CreateBasicProperties();
 
                     channel.BasicPublish(
-                        exchange: _configuration.GetValue<string>("BrokerNameQueue"),
-                        routingKey: messageName,
-                        mandatory: true,
-                        basicProperties: props,
+                        exchange: "",
+                        routingKey: _configuration.GetValue<string>("BrokerNameQueue"),
+                        basicProperties: null,
                         body: body
                     );
                 });

@@ -1,8 +1,6 @@
-﻿using MyNotesApplication.Services.Abstractions;
-
-namespace MyNotesApplication.Services.RabbitMQBroker.Messages
+﻿namespace MyNotesApplication.Services.RabbitMQBroker.Messages
 {
-    public class SendEmailMessage : Message
+    public class SendEmailMessage
     {
         public string Email { get; set; }
         public string Subject { get; set; }
