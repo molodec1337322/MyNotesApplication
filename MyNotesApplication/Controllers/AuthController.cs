@@ -32,6 +32,14 @@ namespace MyNotesApplication.Controllers
             _logger = logger;
         }
 
+        private void SendEmail(string email, string subject, string body)
+        {
+            var payloadMessage = new SendEmailMessage(email, subject, body);
+            var JSONPayloadMessage = JsonSerializer.Serialize(payloadMessage).ToString();
+            var message = new MessageWithJSONPayload(_appConfiguration.GetValue<string>("BrokerEmailServiceName"), JSONPayloadMessage);
+            _messageBroker.SendMessage(message);
+        }
+
         /// <summary>
         /// Req: {"Email": "123", "Password": "112"}
         /// Res: {Bearer: jwtToken}
@@ -122,9 +130,8 @@ namespace MyNotesApplication.Controllers
 
             ConfirmationToken createdToken = _confirmationTokenRepository.Add(GenerateNewRegistrationToken(newUser));
 
-            var emailService = new EmailService(_appConfiguration);
             var confirmationUrl = Url.Action("EmailConfirm", "Auth", new { confirmationGuidUrl = createdToken.ConfirmationGUID }, protocol: HttpContext.Request.Scheme);
-            await emailService.SendEmailAsync(newUser.Email, "Подтвердите свою почту", $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confirmationUrl}'>Подтвердить</a>");
+            SendEmail(newUser.Email, "Подтвердите свою почту", $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confirmationUrl}'>Подтвердить</a>");
 
             return Ok(new { message = "confirm email" });
         }
@@ -182,16 +189,7 @@ namespace MyNotesApplication.Controllers
             return Redirect(_appConfiguration.GetValue<string>("FrontRedirectUrl"));
         }
 
-        [HttpGet]
-        [Route("Test")]
-        public async Task<IActionResult> BrokerTest()
-        {
-            var payloadMessage = new SendEmailMessage("123@123", "Subject", "body");
-            var JSONPayloadMessage = JsonSerializer.Serialize(payloadMessage).ToString();
-            var message = new MessageWithJSONPayload(_appConfiguration.GetValue<string>("BrokerEmailServiceName"), JSONPayloadMessage);
-            _messageBroker.SendMessage(message);
-            return Ok();
-        }
+        
 
         public record AuthData(string Email, string Password);
         public record EmailData(string Email);

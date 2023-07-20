@@ -3,8 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using MyNotesApplication.Data.Interfaces;
 using MyNotesApplication.Data.Models;
 using MyNotesApplication.Services;
+using MyNotesApplication.Services.Interfaces;
+using MyNotesApplication.Services.Message;
+using MyNotesApplication.Services.RabbitMQBroker.Messages;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text.Json;
 using static MyNotesApplication.Controllers.NotesController;
 
 namespace MyNotesApplication.Controllers
@@ -17,6 +21,7 @@ namespace MyNotesApplication.Controllers
         private readonly IRepository<Board> _boardRepository;
         private readonly IRepository<InvitationToken> _invitationTokenRepository;
         private readonly IConfiguration _appConfiguration;
+        private readonly IMessageBroker _messageBroker;
         private readonly ILogger<BoardsController> _logger;
 
         public BoardsController(
@@ -26,6 +31,7 @@ namespace MyNotesApplication.Controllers
             IRepository<Column> columnRepository, 
             IRepository<InvitationToken> invitationTokenRepository,
             IConfiguration configuration,
+            IMessageBroker messageBroker,
             ILogger<BoardsController> logger) 
         { 
             _userRepository = userRepository;
@@ -33,6 +39,7 @@ namespace MyNotesApplication.Controllers
             _boardRepository = boardRepository;
             _invitationTokenRepository = invitationTokenRepository;
             _appConfiguration = configuration;
+            _messageBroker = messageBroker;
             _logger = logger;
         }
 
@@ -41,6 +48,14 @@ namespace MyNotesApplication.Controllers
             HttpContext.Request.Headers.TryGetValue("Authorization", out var token);
             token = token.ToString().Split(" ")[1];
             return new JwtSecurityTokenHandler().ReadJwtToken(token).Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Name).Value;
+        }
+
+        private void SendEmail(string email, string subject, string body)
+        {
+            var payloadMessage = new SendEmailMessage(email, subject, body);
+            var JSONPayloadMessage = JsonSerializer.Serialize(payloadMessage).ToString();
+            var message = new MessageWithJSONPayload(_appConfiguration.GetValue<string>("BrokerEmailServiceName"), JSONPayloadMessage);
+            _messageBroker.SendMessage(message);
         }
 
         private bool IsUserAllowedToInteractWithBoard(User user, Board board)
@@ -164,9 +179,8 @@ namespace MyNotesApplication.Controllers
 
             _invitationTokenRepository.Update(createdToken);
 
-            var emailService = new EmailService(_appConfiguration);
             var invitationUrl = Url.Action("ConfirmInvitation", "Boards", new { invitationGUID = createdToken.InvitationGUID }, protocol: HttpContext.Request.Scheme);
-            await emailService.SendEmailAsync(userToInvite.Email, "Приглашение на доску в качестве участника", $"Вы были приглашашены на доску в качестве участника пользователем {user.Username}. Перейдите по ссылке, чтобы стать участником: <a href='{invitationUrl}'>Подтвердить</a>");
+            SendEmail(userToInvite.Email, "Приглашение на доску в качестве участника", $"Вы были приглашашены на доску в качестве участника пользователем {user.Username}. Перейдите по ссылке, чтобы стать участником: <a href='{invitationUrl}'>Подтвердить</a>");
 
             return Ok();
         }
