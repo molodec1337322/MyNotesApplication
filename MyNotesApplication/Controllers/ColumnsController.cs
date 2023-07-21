@@ -76,6 +76,17 @@ namespace MyNotesApplication.Controllers
             List<Column> columns = _columnRepository.GetWithInclude(c => c.BoardId == BoardId).ToList();
             List<Note> notes = _notesRepository.Get(n => n.BoardId == BoardId).ToList();
 
+            List<Note> notesInColumns = new List<Note>();
+
+            foreach(var column in columns)
+            {
+                foreach(var note in notes)
+                {
+                    notesInColumns = notes.Where(n => n.ColumnId == column.Id).ToList();
+                }
+                column.Notes = notesInColumns;
+            }
+
             return Ok(columns);
         }
 

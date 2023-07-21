@@ -158,15 +158,12 @@ namespace MyNotesApplication.Controllers
             if(oldToken != null)
             {
                 _confirmationTokenRepository.Delete(oldToken);
-                await _confirmationTokenRepository.SaveChanges();
             }
 
             ConfirmationToken newToken = _confirmationTokenRepository.Add(GenerateNewRegistrationToken(user));
-            await _confirmationTokenRepository.SaveChanges();
 
-            var emailService = new EmailService(_appConfiguration);
             var confirmationUrl = Url.Action("EmailConfirm", "Auth", new { confirmationGuidUrl = newToken.ConfirmationGUID }, protocol: HttpContext.Request.Scheme);
-            await emailService.SendEmailAsync(user.Email, "Подтвердите свою почту", $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confirmationUrl}'>Подтвердить</a>");
+            SendEmail(user.Email, "Подтвердите свою почту", $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confirmationUrl}'>Подтвердить</a>");
 
             return Ok();
         }
@@ -189,7 +186,6 @@ namespace MyNotesApplication.Controllers
             return Redirect(_appConfiguration.GetValue<string>("FrontRedirectUrl"));
         }
 
-        
 
         public record AuthData(string Email, string Password);
         public record EmailData(string Email);

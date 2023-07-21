@@ -1,4 +1,5 @@
-﻿using MyNotesApplication.Data.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using MyNotesApplication.Data.Interfaces;
 using MyNotesApplication.Data.Models;
 using System.Linq.Expressions;
 
@@ -27,14 +28,14 @@ namespace MyNotesApplication.Data.Repository
             return true;
         }
 
-        public FileModel Get(int id) => _dbContext.FileModels.FirstOrDefault(f => f.Id == id);
+        public FileModel Get(int id) => _dbContext.FileModels.AsNoTracking().FirstOrDefault(f => f.Id == id);
 
         public IEnumerable<FileModel> Get(Func<FileModel, bool> predicate)
         {
             throw new NotImplementedException();
         }
 
-        public IEnumerable<FileModel> GetAll() => _dbContext.FileModels.ToList();
+        public IEnumerable<FileModel> GetAll() => _dbContext.FileModels.AsNoTracking().ToList();
 
         public IEnumerable<FileModel> GetWithInclude(Func<FileModel, bool> predicate, params Expression<Func<FileModel, object>>[] includeProperties)
         {

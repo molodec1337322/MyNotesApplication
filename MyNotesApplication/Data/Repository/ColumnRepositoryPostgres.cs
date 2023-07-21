@@ -29,16 +29,16 @@ namespace MyNotesApplication.Data.Repository
             return true;
         }
 
-        public Column Get(int id) => _myDbContext.Columns.Find(id);
+        public Column Get(int id) => _myDbContext.Columns.AsNoTracking().FirstOrDefault(c => c.Id == id);
 
-        public IEnumerable<Column> GetAll() => _myDbContext.Columns.ToList();
+        public IEnumerable<Column> GetAll() => _myDbContext.Columns.AsNoTracking().ToList();
 
-        public IEnumerable<Column> Get(Func<Column, bool> predicate) => _myDbContext.Columns.Where(predicate).ToList();
+        public IEnumerable<Column> Get(Func<Column, bool> predicate) => _myDbContext.Columns.AsNoTracking().Where(predicate).ToList();
 
         public IEnumerable<Column> GetWithInclude(Func<Column, bool> predicate, params Expression<Func<Column, object>>[] includeProperties)
         {
             var query = Include(includeProperties);
-            return query.Where(predicate).ToList();
+            return query.AsNoTracking().Where(predicate).ToList();
         }
 
         private IQueryable<Column> Include(params Expression<Func<Column, object>>[] includeProperties)

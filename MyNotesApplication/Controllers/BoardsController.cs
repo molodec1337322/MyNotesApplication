@@ -201,7 +201,6 @@ namespace MyNotesApplication.Controllers
             newUbr.Board = token.Board;
             newUbr.Role = UserBoardRoles.GUEST.ToString();
 
-
             _userBoardRoleRepository.Add(newUbr);
 
             List<InvitationToken> tokensToDelete = _invitationTokenRepository.Get(t => t.UserId == token.UserId).ToList();

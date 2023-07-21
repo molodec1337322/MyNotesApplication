@@ -28,16 +28,16 @@ namespace MyNotesApplication.Data.Repository
             return true;
         }
 
-        public Board Get(int id) => _myDbContext.Boards.Find(id);
+        public Board Get(int id) => _myDbContext.Boards.AsNoTracking().FirstOrDefault(b => b.Id == id);
 
-        public IEnumerable<Board> GetAll() => _myDbContext.Boards.ToList();
+        public IEnumerable<Board> GetAll() => _myDbContext.Boards.AsNoTracking().ToList();
 
-        public IEnumerable<Board> Get(Func<Board, bool> predicate) => _myDbContext.Boards.Where(predicate).ToList();
+        public IEnumerable<Board> Get(Func<Board, bool> predicate) => _myDbContext.Boards.AsNoTracking().Where(predicate).ToList();
 
         public IEnumerable<Board> GetWithInclude(Func<Board, bool> predicate, params Expression<Func<Board, object>>[] includeProperties)
         {
             var query = Include(includeProperties);
-            return query.Where(predicate).ToList();
+            return query.AsNoTracking().Where(predicate).ToList();
         }
 
         private IQueryable<Board> Include(params Expression<Func<Board, object>>[] includeProperties)

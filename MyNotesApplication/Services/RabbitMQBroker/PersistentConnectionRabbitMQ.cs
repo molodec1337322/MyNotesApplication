@@ -86,7 +86,6 @@ namespace MyNotesApplication.Services.RabbitMQBroker
             _disposed = true;
             try
             {
-
                 if (_connection != null) _connection.Dispose();
             }
             catch (IOException ex)

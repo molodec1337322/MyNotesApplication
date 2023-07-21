@@ -28,23 +28,23 @@ namespace MyNotesApplication.Data.Repository
             return true;
         }
 
-        public UserBoardRole Get(int id) => _myDbContext.UserBoardRoles.FirstOrDefault(x => x.Id == id);
+        public UserBoardRole Get(int id) => _myDbContext.UserBoardRoles.AsNoTracking().FirstOrDefault(x => x.Id == id);
 
-        public IEnumerable<UserBoardRole> Get(Func<UserBoardRole, bool> predicate) => _myDbContext.UserBoardRoles.Where(predicate).ToList();
+        public IEnumerable<UserBoardRole> Get(Func<UserBoardRole, bool> predicate) => _myDbContext.UserBoardRoles.AsNoTracking().Where(predicate).ToList();
 
         public IEnumerable<UserBoardRole> GetWithInclude(Func<UserBoardRole, bool> predicate, params Expression<Func<UserBoardRole, object>>[] includeProperties)
         {
             var query = Include(includeProperties);
-            return query.Where(predicate).ToList();
+            return query.AsNoTracking().Where(predicate).ToList();
         }
 
         private IQueryable<UserBoardRole> Include(params Expression<Func<UserBoardRole, object>>[] includeProperties)
         {
-            IQueryable<UserBoardRole> query = _myDbContext.UserBoardRoles;
+            IQueryable<UserBoardRole> query = _myDbContext.UserBoardRoles.AsNoTracking();
             return includeProperties.Aggregate(query, (current, includeProperty) => current.Include(includeProperty));
         }
 
-        public IEnumerable<UserBoardRole> GetAll() => _myDbContext.UserBoardRoles.ToList();
+        public IEnumerable<UserBoardRole> GetAll() => _myDbContext.UserBoardRoles.AsNoTracking().ToList();
 
         public async Task<int> SaveChanges() => await _myDbContext.SaveChangesAsync();
 

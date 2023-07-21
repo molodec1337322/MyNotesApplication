@@ -28,23 +28,23 @@ namespace MyNotesApplication.Data.Repository
             return true;
         }
 
-        public Note Get(int id) => _myDBContext.Notes.FirstOrDefault(n => n.Id == id);
+        public Note Get(int id) => _myDBContext.Notes.AsNoTracking().FirstOrDefault(n => n.Id == id);
 
-        public IEnumerable<Note> Get(Func<Note, bool> predicate) => _myDBContext.Notes.Where(predicate).ToList();
+        public IEnumerable<Note> Get(Func<Note, bool> predicate) => _myDBContext.Notes.AsNoTracking().Where(predicate).ToList();
 
         public IEnumerable<Note> GetWithInclude(Func<Note, bool> predicate, params Expression<Func<Note, object>>[] includeProperties)
         {
             var query = Include(includeProperties);
-            return query.Where(predicate).ToList();
+            return query.AsNoTracking().Where(predicate).ToList();
         }
 
         private IQueryable<Note> Include(params Expression<Func<Note, object>>[] includeProperties)
         {
-            IQueryable<Note> query = _myDBContext.Notes;
+            IQueryable<Note> query = _myDBContext.Notes.AsNoTracking();
             return includeProperties.Aggregate(query, (current, includeProperty) => current.Include(includeProperty));
         }
 
-        public IEnumerable<Note> GetAll() => _myDBContext.Notes.ToList();
+        public IEnumerable<Note> GetAll() => _myDBContext.Notes.AsNoTracking().ToList();
 
         public async Task<int> SaveChanges() => await _myDBContext.SaveChangesAsync();
 

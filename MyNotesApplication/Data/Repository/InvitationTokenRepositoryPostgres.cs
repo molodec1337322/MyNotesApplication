@@ -29,21 +29,21 @@ namespace MyNotesApplication.Data.Repository
             return true;
         }
 
-        public InvitationToken Get(int id) => _myDbContext.InvitationTokens.Find(id);
+        public InvitationToken Get(int id) => _myDbContext.InvitationTokens.AsNoTracking().FirstOrDefault(i => i.Id == id);
 
-        public IEnumerable<InvitationToken> Get(Func<InvitationToken, bool> predicate) => _myDbContext.InvitationTokens.Where(predicate).ToList();
+        public IEnumerable<InvitationToken> Get(Func<InvitationToken, bool> predicate) => _myDbContext.InvitationTokens.AsNoTracking().Where(predicate).ToList();
 
-        public IEnumerable<InvitationToken> GetAll() => _myDbContext.InvitationTokens.ToList();
+        public IEnumerable<InvitationToken> GetAll() => _myDbContext.InvitationTokens.AsNoTracking().ToList();
 
         public IEnumerable<InvitationToken> GetWithInclude(Func<InvitationToken, bool> predicate, params Expression<Func<InvitationToken, object>>[] includeProperties)
         {
             var query = Include(includeProperties);
-            return query.Where(predicate).ToList();
+            return query.AsNoTracking().Where(predicate).ToList();
         }
 
         private IQueryable<InvitationToken> Include(params Expression<Func<InvitationToken, object>>[] includeProperties)
         {
-            IQueryable<InvitationToken> query = _myDbContext.InvitationTokens;
+            IQueryable<InvitationToken> query = _myDbContext.InvitationTokens.AsNoTracking();
             return includeProperties.Aggregate(query, (current, includeProperty) => current.Include(includeProperty));
         }
 

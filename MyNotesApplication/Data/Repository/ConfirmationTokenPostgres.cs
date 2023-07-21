@@ -29,14 +29,14 @@ namespace MyNotesApplication.Data.Repository
             return true;
         }
 
-        public ConfirmationToken Get(int id) => _myDBContext.ConfirmationTokens.Find(id);
+        public ConfirmationToken Get(int id) => _myDBContext.ConfirmationTokens.AsNoTracking().FirstOrDefault(c => c.Id == id);
 
-        public IEnumerable<ConfirmationToken> Get(Func<ConfirmationToken, bool> predicate) => _myDBContext.ConfirmationTokens.Where(predicate).ToList();
+        public IEnumerable<ConfirmationToken> Get(Func<ConfirmationToken, bool> predicate) => _myDBContext.ConfirmationTokens.AsNoTracking().Where(predicate).ToList();
 
         public IEnumerable<ConfirmationToken> GetWithInclude(Func<ConfirmationToken, bool> predicate, params Expression<Func<ConfirmationToken, object>>[] includeProperties)
         {
             var query = Include(includeProperties);
-            return query.Where(predicate).ToList();
+            return query.AsNoTracking().Where(predicate).ToList();
         }
 
         private IQueryable<ConfirmationToken> Include(params Expression<Func<ConfirmationToken, object>>[] includeProperties)
@@ -45,7 +45,7 @@ namespace MyNotesApplication.Data.Repository
             return includeProperties.Aggregate(query, (current, includeProperty) => current.Include(includeProperty));
         }
 
-        public IEnumerable<ConfirmationToken> GetAll() => _myDBContext.ConfirmationTokens.ToList();
+        public IEnumerable<ConfirmationToken> GetAll() => _myDBContext.ConfirmationTokens.AsNoTracking().ToList();
 
         public async Task<int> SaveChanges() => await _myDBContext.SaveChangesAsync();
 
