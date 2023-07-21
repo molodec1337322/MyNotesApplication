@@ -40,14 +40,14 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<MyDBContext>(options => options.UseNpgsql(_DBconfigString.GetConnectionString("PostgreSQLConnection")));
 
-builder.Services.AddScoped<IRepository<Note>, NoteRepositoryPostgres>();
-builder.Services.AddScoped<IRepository<User>, UserRepositoryPostgres>();
-builder.Services.AddScoped<IRepository<ConfirmationToken>, ConfirmationTokenPostgres>();
-builder.Services.AddScoped<IRepository<FileModel>, FileModelRepositoryPostgres>();
-builder.Services.AddScoped<IRepository<Board>, BoardRepositoryPostgres>();
-builder.Services.AddScoped<IRepository<UserBoardRole>, UserBoardRoleRepositoryPostgres>();
-builder.Services.AddScoped<IRepository<Column>, ColumnRepositoryPostgres>();
-builder.Services.AddScoped<IRepository<InvitationToken>, InvitationTokenRepositoryPostgres>();
+builder.Services.AddScoped<IRepository<Note>, PostgreGenericRepository<Note>>();
+builder.Services.AddScoped<IRepository<User>, PostgreGenericRepository<User>>();
+builder.Services.AddScoped<IRepository<ConfirmationToken>, PostgreGenericRepository<ConfirmationToken>>();
+builder.Services.AddScoped<IRepository<FileModel>, PostgreGenericRepository<FileModel>>();
+builder.Services.AddScoped<IRepository<Board>, PostgreGenericRepository<Board>>();
+builder.Services.AddScoped<IRepository<UserBoardRole>, PostgreGenericRepository<UserBoardRole>>();
+builder.Services.AddScoped<IRepository<Column>, PostgreGenericRepository<Column>>();
+builder.Services.AddScoped<IRepository<InvitationToken>, PostgreGenericRepository<InvitationToken>>();
 
 builder.Services.AddScoped<IMessageBrokerPersistentConnection, PersistentConnectionRabbitMQ>();
 builder.Services.AddScoped<IMessageBroker, MessageBrokerRabbitMQ>();

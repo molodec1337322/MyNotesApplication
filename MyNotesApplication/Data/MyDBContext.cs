@@ -19,6 +19,11 @@ namespace MyNotesApplication.Data
         public DbSet<UserBoardRole> UserBoardRoles { get; set; }
         public DbSet<InvitationToken> InvitationTokens { get; set;}
 
+        public void Dispose()
+        {
+            base.Dispose();
+        }
+
         public void DisposeDbset<T>() where T : class
         {
             var Tname = typeof(T).Name;
