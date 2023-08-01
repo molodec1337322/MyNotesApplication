@@ -80,12 +80,35 @@ namespace MyNotesApplication.Controllers
         [HttpGet]
         [Authorize]
         [Route("AllOwned")]
-        public async Task<IActionResult> GetBoards()
+        public async Task<IActionResult> GetOwnedBoards()
         {
             string username = GetUsernameFromJwtToken();
             User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
 
             List<UserBoardRole> ubrList = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.Role == UserBoardRoles.OWNER.ToString()).ToList();
+            List<Board> boardList = new List<Board>();//_boardRepository.GetAll().Where(b => ).ToList();
+            foreach (var ubr in ubrList)
+            {
+                boardList.Add(_boardRepository.Get(ubr.BoardId));
+            }
+
+            return Ok(boardList);
+        }
+
+        /// <summary>
+        /// req {}
+        /// res [{"id": 1, "name": "gfdsggf"}, {"id": 2, "name": "gffdgdfgf"}]
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Authorize]
+        [Route("AllGuest")]
+        public async Task<IActionResult> GetAllGuestBoards()
+        {
+            string username = GetUsernameFromJwtToken();
+            User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
+
+            List<UserBoardRole> ubrList = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.Role == UserBoardRoles.GUEST.ToString()).ToList();
             List<Board> boardList = new List<Board>();//_boardRepository.GetAll().Where(b => ).ToList();
             foreach (var ubr in ubrList)
             {
@@ -229,11 +252,9 @@ namespace MyNotesApplication.Controllers
         }
 
         public record BoardData(int id, string Name);
-
         public record NewBoardData(string Name);
-
         public record UserToInviteData(string Email);
-
         public record UserChangeRoleData(int userId, string role);
+
     }
 }
