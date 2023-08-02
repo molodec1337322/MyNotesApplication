@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 
 namespace MyNotesApplication.Data.Repository
 {
-    public class PostgreGenericRepository<T> : IRepository<T> where T : class, IDisposable
+    public class PostgreGenericRepository<T> : IRepository<T> where T : class
     {
         private readonly MyDBContext _context;
         private DbSet<T> _dbSet { get; set; }
@@ -56,11 +56,6 @@ namespace MyNotesApplication.Data.Repository
             _dbSet.Update(entity);
             _context.SaveChanges();
             return entity;
-        }
-
-        public override void Dispose()
-        {
-
         }
     }
 }
