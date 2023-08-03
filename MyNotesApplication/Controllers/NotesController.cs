@@ -70,7 +70,7 @@ namespace MyNotesApplication.Controllers
 
         private bool IsUserAllowedToInteractWithNote(User user, Note note, UserBoardRoles role)
         {
-            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.BoardId == note.BoardId && u.Role == UserBoardRoles.OWNER.ToString()).FirstOrDefault();
+            UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.BoardId == note.BoardId && u.Role == role.ToString()).FirstOrDefault();
             if (ubr == null) return false;
             return true;
         }
@@ -205,13 +205,18 @@ namespace MyNotesApplication.Controllers
             return Ok(notesToUpdate);
         }
 
+        /// <summary>
+        /// req URL
+        /// res {message = "deleted", NoteId = id}
+        /// </summary>
+        /// <param name="NoteId"></param>
+        /// <returns></returns>
         [HttpDelete]
         [Authorize]
         [Route("Delete/{NoteId}")]
         public async Task<IActionResult> DeleteNote(int NoteId)
         {
             string username = GetUsernameFromJwtToken();
-            NoteData? updatedNoteData = await HttpContext.Request.ReadFromJsonAsync<NoteData>();
 
             User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
             Note? note = _noteRepository.Get(NoteId);
