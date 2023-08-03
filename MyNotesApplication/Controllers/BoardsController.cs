@@ -235,6 +235,54 @@ namespace MyNotesApplication.Controllers
             return Redirect(_appConfiguration.GetValue<string>("FrontRedirectUrl"));
         }
 
+        /// <summary>
+        /// req URL
+        /// res [{Name: "fsdgsd", ...}]
+        /// </summary>
+        /// <param name="boardId"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [Authorize]
+        [Route("Owners/{boardId}")]
+        public async Task<IActionResult> GetOwnersOfBoard(int boardId)
+        {
+            List<UserBoardRole> ubrlist = _userBoardRoleRepository.Get(u => u.BoardId == boardId && u.Role == UserBoardRoles.OWNER.ToString()).ToList();
+            List<User> users = new List<User>();
+            User? user = null;
+
+            foreach(var ubr in ubrlist)
+            {
+                user = _userRepository.Get(u => u.Id == ubr.UserId).FirstOrDefault();
+                users.Add(user);
+            }
+
+            return Ok(users);
+        }
+
+        /// <summary>
+        /// req URL
+        /// res [{Name: "fsdgsd", ...}]
+        /// </summary>
+        /// <param name="boardId"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [Authorize]
+        [Route("Guests/{boardId}")]
+        public async Task<IActionResult> GetGuestsOfBoard(int boardId)
+        {
+            List<UserBoardRole> ubrlist = _userBoardRoleRepository.Get(u => u.BoardId == boardId && u.Role == UserBoardRoles.GUEST.ToString()).ToList();
+            List<User> users = new List<User>();
+            User? user = null;
+
+            foreach (var ubr in ubrlist)
+            {
+                user = _userRepository.Get(u => u.Id == ubr.UserId).FirstOrDefault();
+                users.Add(user);
+            }
+
+            return Ok(users);
+        }
+
         [HttpPut]
         [Authorize]
         [Route("ChangeRole/{BoardId}")]
