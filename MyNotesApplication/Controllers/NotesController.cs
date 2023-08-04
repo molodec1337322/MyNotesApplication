@@ -172,7 +172,7 @@ namespace MyNotesApplication.Controllers
 
             Board? board = _boardRepository.Get(notesData.BoardId);
 
-            if (!IsUserAllowedToInteractWithBoard(user, board, UserBoardRoles.OWNER)) return Forbid();
+            if (!IsUserAllowedToInteractWithBoard(user, board)) return Forbid();
 
             List<NoteOrderAndColumnUpdateData> notesDataList = notesData.notes;
             List<Note> notesToUpdate = new List<Note>();

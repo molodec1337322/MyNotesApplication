@@ -271,6 +271,7 @@ namespace MyNotesApplication.Controllers
         public async Task<IActionResult> GetGuestsOfBoard(int boardId)
         {
             List<UserBoardRole> ubrlist = _userBoardRoleRepository.Get(u => u.BoardId == boardId && u.Role == UserBoardRoles.GUEST.ToString()).ToList();
+
             List<User> users = new List<User>();
             User? user = null;
 
