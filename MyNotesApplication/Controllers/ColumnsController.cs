@@ -148,6 +148,14 @@ namespace MyNotesApplication.Controllers
             return Ok();
         }
 
+        [HttpPut]
+        [Authorize]
+        [Route("Update/{columnId}")]
+        public async Task<IActionResult> Update(int columnId)
+        {
+            return Ok();
+        }
+
         public record NewColumnData (string Name, int OrderPlace, int BoardId);
     }
 }
