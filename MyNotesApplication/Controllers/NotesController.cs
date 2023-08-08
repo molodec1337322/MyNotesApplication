@@ -151,7 +151,7 @@ namespace MyNotesApplication.Controllers
             Note updatedNote = _noteRepository.Update(note);
             await _noteRepository.SaveChanges();
 
-            return Ok();
+            return Ok(updatedNote);
         }
 
         /// <summary>
