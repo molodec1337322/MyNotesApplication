@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MyNotesApplication.Migrations
 {
     [DbContext(typeof(MyDBContext))]
-    [Migration("20230717161754_update-4")]
-    partial class update4
+    [Migration("20230809093046_update-6")]
+    partial class update6
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -205,6 +205,35 @@ namespace MyNotesApplication.Migrations
                     b.ToTable("Notes");
                 });
 
+            modelBuilder.Entity("MyNotesApplication.Data.Models.PasswordResetToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConfirmationGUID")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiredDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("PasswordResetToken");
+                });
+
             modelBuilder.Entity("MyNotesApplication.Data.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -331,6 +360,17 @@ namespace MyNotesApplication.Migrations
                     b.Navigation("Column");
                 });
 
+            modelBuilder.Entity("MyNotesApplication.Data.Models.PasswordResetToken", b =>
+                {
+                    b.HasOne("MyNotesApplication.Data.Models.User", "User")
+                        .WithOne("PasswordResetToken")
+                        .HasForeignKey("MyNotesApplication.Data.Models.PasswordResetToken", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("MyNotesApplication.Data.Models.UserBoardRole", b =>
                 {
                     b.HasOne("MyNotesApplication.Data.Models.Board", "Board")
@@ -377,6 +417,9 @@ namespace MyNotesApplication.Migrations
                         .IsRequired();
 
                     b.Navigation("InvitationTokens");
+
+                    b.Navigation("PasswordResetToken")
+                        .IsRequired();
 
                     b.Navigation("UserBoards");
                 });

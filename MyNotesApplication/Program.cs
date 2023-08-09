@@ -48,6 +48,7 @@ builder.Services.AddScoped<IRepository<Board>, PostgreGenericRepository<Board>>(
 builder.Services.AddScoped<IRepository<UserBoardRole>, PostgreGenericRepository<UserBoardRole>>();
 builder.Services.AddScoped<IRepository<Column>, PostgreGenericRepository<Column>>();
 builder.Services.AddScoped<IRepository<InvitationToken>, PostgreGenericRepository<InvitationToken>>();
+builder.Services.AddScoped<IRepository<PasswordResetToken>, PostgreGenericRepository<PasswordResetToken>>();
 
 builder.Services.AddScoped<IMessageBrokerPersistentConnection, PersistentConnectionRabbitMQ>();
 builder.Services.AddScoped<IMessageBroker, MessageBrokerRabbitMQ>();

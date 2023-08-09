@@ -19,14 +19,16 @@ namespace MyNotesApplication.Controllers
     {
         private readonly IRepository<User> _userRepository;
         private readonly IRepository<ConfirmationToken> _confirmationTokenRepository;
+        private readonly IRepository<PasswordResetToken> _passwordResetTokenRepository;
         private readonly IConfiguration _appConfiguration;
         private readonly IMessageBroker _messageBroker;
         private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IRepository<User> userRepo, IRepository<ConfirmationToken> confirmationTokenRepo, IConfiguration appConfiguration, IMessageBroker messageBroker, ILogger<AuthController> logger)
+        public AuthController(IRepository<User> userRepo, IRepository<ConfirmationToken> confirmationTokenRepo, IRepository<PasswordResetToken> passwordResetTokenRepository, IConfiguration appConfiguration, IMessageBroker messageBroker, ILogger<AuthController> logger)
         {
             _userRepository = userRepo;
             _confirmationTokenRepository = confirmationTokenRepo;
+            _passwordResetTokenRepository = passwordResetTokenRepository;
             _appConfiguration = appConfiguration;
             _messageBroker = messageBroker;
             _logger = logger;
@@ -186,9 +188,68 @@ namespace MyNotesApplication.Controllers
             return Redirect(_appConfiguration.GetValue<string>("FrontRedirectUrl"));
         }
 
+        [HttpPost]
+        [Route("ResetPassword")]
+        public async Task<IActionResult> ResetPassword()
+        {
+            EmailData? emailData = await HttpContext.Request.ReadFromJsonAsync<EmailData>();
+
+            User? user = _userRepository.Get(u => u.Email == emailData.Email).FirstOrDefault();
+            if (user == null) return BadRequest("No such user");
+
+            PasswordResetToken? resetToken = _passwordResetTokenRepository.Get(t => t.UserId == user.Id).FirstOrDefault();
+            if (resetToken != null) _passwordResetTokenRepository.Delete(resetToken);
+
+            resetToken = new PasswordResetToken();
+            resetToken.User = user;
+            resetToken.UserId = user.Id;
+            resetToken.CreatedDate = DateTime.UtcNow;
+            resetToken.ExpiredDate = DateTime.UtcNow.AddHours(2);
+            resetToken.ConfirmationGUID = Guid.NewGuid().ToString();
+
+            _passwordResetTokenRepository.Add(resetToken);
+
+            var resetUrl = Url.Action("NewPassword", "Auth", new { confirmationGuidUrl = resetToken.ConfirmationGUID }, protocol: HttpContext.Request.Scheme);
+            SendEmail(user.Email, " Смена пароля", $"Смените пароль перейдя по ссылке: <a href='{resetUrl}'>Подтвердить</a>");
+
+            return Ok();
+        }
+
+        [HttpGet]
+        [Route("NewPassword/{resetToken}")]
+        public async Task<IActionResult> NewPassword(string resetToken)
+        {
+            var redirectUrl = $"{_appConfiguration.GetValue<string>("FrontRedirectUrl")}/PasswordReset/{resetToken}";
+            return Redirect(redirectUrl);
+        }
+
+        [HttpPut]
+        [Route("NewPassword/{resetToken}")]
+        public async Task<IActionResult> NewPasswordConfirm(string resetToken)
+        {
+            PasswordResetToken? token = _passwordResetTokenRepository.Get(t => t.ConfirmationGUID == resetToken).FirstOrDefault();
+
+            NewPasswordData? passwordData = await HttpContext.Request.ReadFromJsonAsync<NewPasswordData>();
+
+            if (token == null) return BadRequest("no such token found");
+            if (token.ExpiredDate < DateTime.UtcNow) return BadRequest("Token expired, request it again in registration form");
+
+            User user = _userRepository.Get(token.UserId);
+            user.Password = passwordData.password;
+
+            PasswordHasher<User> ph = new PasswordHasher<User>();
+            user.Password = ph.HashPassword(user, passwordData.password);
+
+            _passwordResetTokenRepository.Delete(token);
+            _userRepository.Update(user);
+
+            return Ok();
+        }
+
 
         public record AuthData(string Email, string Password);
         public record EmailData(string Email);
         public record RegisterData(string Email, string Username, string Password);
+        public record NewPasswordData(string password);
     }
 }

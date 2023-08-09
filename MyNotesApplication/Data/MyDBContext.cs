@@ -18,5 +18,6 @@ namespace MyNotesApplication.Data
         public DbSet<FileModel> FileModels { get; set; }
         public DbSet<UserBoardRole> UserBoardRoles { get; set; }
         public DbSet<InvitationToken> InvitationTokens { get; set;}
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
     }
 }

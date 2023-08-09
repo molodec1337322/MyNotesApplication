@@ -15,5 +15,6 @@ namespace MyNotesApplication.Data.Models
 
         public ConfirmationToken ConfirmationToken { get; set; }
         public IEnumerable<InvitationToken> InvitationTokens { get; set;}
+        public PasswordResetToken PasswordResetToken { get; set; }
     }
 }

@@ -148,14 +148,38 @@ namespace MyNotesApplication.Controllers
             return Ok();
         }
 
+
+        /// <summary>
+        /// req {name: "newName", orderPlace: 1}
+        /// res {"id": 1, "name": "newName", "orderPlace": 1, "notes": null, "boardId": 1}
+        /// </summary>
+        /// <param name="columnId"></param>
+        /// <returns></returns>
         [HttpPut]
         [Authorize]
         [Route("Update/{columnId}")]
         public async Task<IActionResult> Update(int columnId)
         {
+            string username = GetUsernameFromJwtToken();
+            EditColumnData? columnData = await HttpContext.Request.ReadFromJsonAsync<EditColumnData>();
+
+            User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
+
+            Column? column = _columnRepository.Get(columnId); 
+            if (column == null) return BadRequest();
+
+            Board? board = _boardRepository.Get(column.BoardId);
+            if (!IsUserAllowedToInteractWithBoard(user, board, UserBoardRoles.OWNER)) return Forbid();
+
+            column.Name = columnData.Name;
+            column.OrderPlace = columnData.OrderPlace;
+
+            _columnRepository.Update(column);
+
             return Ok();
         }
 
         public record NewColumnData (string Name, int OrderPlace, int BoardId);
+        public record EditColumnData (string Name, int OrderPlace);
     }
 }
