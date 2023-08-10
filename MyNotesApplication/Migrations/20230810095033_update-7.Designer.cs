@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MyNotesApplication.Migrations
 {
     [DbContext(typeof(MyDBContext))]
-    [Migration("20230809093046_update-6")]
-    partial class update6
+    [Migration("20230810095033_update-7")]
+    partial class update7
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -231,7 +231,7 @@ namespace MyNotesApplication.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("PasswordResetToken");
+                    b.ToTable("PasswordResetTokens");
                 });
 
             modelBuilder.Entity("MyNotesApplication.Data.Models.User", b =>

@@ -228,7 +228,7 @@ namespace MyNotesApplication.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("PasswordResetToken");
+                    b.ToTable("PasswordResetTokens");
                 });
 
             modelBuilder.Entity("MyNotesApplication.Data.Models.User", b =>

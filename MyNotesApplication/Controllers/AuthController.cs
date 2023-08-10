@@ -201,16 +201,15 @@ namespace MyNotesApplication.Controllers
             if (resetToken != null) _passwordResetTokenRepository.Delete(resetToken);
 
             resetToken = new PasswordResetToken();
-            resetToken.User = user;
             resetToken.UserId = user.Id;
             resetToken.CreatedDate = DateTime.UtcNow;
             resetToken.ExpiredDate = DateTime.UtcNow.AddHours(2);
             resetToken.ConfirmationGUID = Guid.NewGuid().ToString();
 
-            _passwordResetTokenRepository.Add(resetToken);
+            PasswordResetToken createdToken = _passwordResetTokenRepository.Add(resetToken);
 
-            var resetUrl = Url.Action("NewPassword", "Auth", new { confirmationGuidUrl = resetToken.ConfirmationGUID }, protocol: HttpContext.Request.Scheme);
-            SendEmail(user.Email, " Смена пароля", $"Смените пароль перейдя по ссылке: <a href='{resetUrl}'>Подтвердить</a>");
+            var resetUrl = Url.Action("NewPassword", "Auth", new { resetToken = createdToken.ConfirmationGUID }, protocol: HttpContext.Request.Scheme);
+            SendEmail(user.Email, "Смена пароля", $"Для смены пароля перейдите по ссылке: <a href='{resetUrl}'>Подтвердить</a>. <br/>Если вы не запрашивали смену пароля, то просто игнорируйте это письмо.");
 
             return Ok();
         }
@@ -224,7 +223,7 @@ namespace MyNotesApplication.Controllers
         }
 
         [HttpPut]
-        [Route("NewPassword/{resetToken}")]
+        [Route("NewPasswordConfirm/{resetToken}")]
         public async Task<IActionResult> NewPasswordConfirm(string resetToken)
         {
             PasswordResetToken? token = _passwordResetTokenRepository.Get(t => t.ConfirmationGUID == resetToken).FirstOrDefault();

@@ -167,7 +167,6 @@ namespace MyNotesApplication.Controllers
             string username = GetUsernameFromJwtToken();
             User? user = _userRepository.GetAll().FirstOrDefault(u => u.Username == username);
 
-
             NoteOrderAndColumnUpdateDataList? notesData = await HttpContext.Request.ReadFromJsonAsync<NoteOrderAndColumnUpdateDataList>();
 
             Board? board = _boardRepository.Get(notesData.BoardId);
