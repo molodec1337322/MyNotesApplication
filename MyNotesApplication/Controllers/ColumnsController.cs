@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MyNotesApplication.Data.Interfaces;
 using MyNotesApplication.Data.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace MyNotesApplication.Controllers
 {
+    /*
     [Route("api/v1/Columns")]
     public class ColumnsController : Controller
     {
@@ -187,4 +187,5 @@ namespace MyNotesApplication.Controllers
         public record NewColumnData (string Name, int OrderPlace, int BoardId);
         public record EditColumnData (string Name, int OrderPlace);
     }
+    */
 }

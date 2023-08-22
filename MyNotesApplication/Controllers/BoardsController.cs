@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MyNotesApplication.Data.Interfaces;
 using MyNotesApplication.Data.Models;
 using MyNotesApplication.Services;
 using MyNotesApplication.Services.Interfaces;
@@ -9,10 +8,10 @@ using MyNotesApplication.Services.RabbitMQBroker.Messages;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Json;
-using static MyNotesApplication.Controllers.NotesController;
 
 namespace MyNotesApplication.Controllers
 {
+    /*
     [Route("api/v1/Boards")]
     public class BoardsController : Controller
     {
@@ -313,4 +312,5 @@ namespace MyNotesApplication.Controllers
         public record UserChangeRoleData(int userId, string role);
 
     }
+    */
 }

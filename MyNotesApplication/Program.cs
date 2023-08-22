@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MyNotesApplication.Data;
-using MyNotesApplication.Data.Interfaces;
 using MyNotesApplication.Data.Models;
-using MyNotesApplication.Data.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -39,16 +37,6 @@ builder.Services.AddSession();
 builder.Services.AddControllers();
 
 builder.Services.AddDbContext<MyDBContext>(options => options.UseNpgsql(_DBconfigString.GetConnectionString("PostgreSQLConnection")));
-
-builder.Services.AddScoped<IRepository<Note>, PostgreGenericRepository<Note>>();
-builder.Services.AddScoped<IRepository<User>, PostgreGenericRepository<User>>();
-builder.Services.AddScoped<IRepository<ConfirmationToken>, PostgreGenericRepository<ConfirmationToken>>();
-builder.Services.AddScoped<IRepository<FileModel>, PostgreGenericRepository<FileModel>>();
-builder.Services.AddScoped<IRepository<Board>, PostgreGenericRepository<Board>>();
-builder.Services.AddScoped<IRepository<UserBoardRole>, PostgreGenericRepository<UserBoardRole>>();
-builder.Services.AddScoped<IRepository<Column>, PostgreGenericRepository<Column>>();
-builder.Services.AddScoped<IRepository<InvitationToken>, PostgreGenericRepository<InvitationToken>>();
-builder.Services.AddScoped<IRepository<PasswordResetToken>, PostgreGenericRepository<PasswordResetToken>>();
 
 builder.Services.AddScoped<IMessageBrokerPersistentConnection, PersistentConnectionRabbitMQ>();
 builder.Services.AddScoped<IMessageBroker, MessageBrokerRabbitMQ>();

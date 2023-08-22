@@ -3,8 +3,10 @@ using MyNotesApplication.Data.Models;
 
 namespace MyNotesApplication.Data
 {
-    public class MyDBContext : DbContext, IDisposable
+    public class MyDBContext : DbContext
     {
+        private bool _disposed = false;
+
         public MyDBContext(DbContextOptions<MyDBContext> options) : base(options)
         {
             Console.WriteLine("\nDBContext Created!!!\n");
@@ -19,11 +21,5 @@ namespace MyNotesApplication.Data
         public DbSet<UserBoardRole> UserBoardRoles { get; set; }
         public DbSet<InvitationToken> InvitationTokens { get; set;}
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
-
-        public override void Dispose()
-        {
-            base.Dispose();
-            Console.WriteLine("\nDBContext Disposed!!!\n");
-        }
     }
 }

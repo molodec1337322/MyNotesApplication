@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using MyNotesApplication.Data.Interfaces;
 using MyNotesApplication.Data.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -11,24 +10,22 @@ using MyNotesApplication.Services.Interfaces;
 using MyNotesApplication.Services.RabbitMQBroker.Messages;
 using MyNotesApplication.Services.Message;
 using System.Text.Json;
+using MyNotesApplication.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace MyNotesApplication.Controllers
 {
     [Route("api/v1/Auth")]
     public class AuthController : Controller
     {
-        private readonly IRepository<User> _userRepository;
-        private readonly IRepository<ConfirmationToken> _confirmationTokenRepository;
-        private readonly IRepository<PasswordResetToken> _passwordResetTokenRepository;
+        private readonly IServiceProvider _services;
         private readonly IConfiguration _appConfiguration;
         private readonly IMessageBroker _messageBroker;
         private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IRepository<User> userRepo, IRepository<ConfirmationToken> confirmationTokenRepo, IRepository<PasswordResetToken> passwordResetTokenRepository, IConfiguration appConfiguration, IMessageBroker messageBroker, ILogger<AuthController> logger)
+        public AuthController(IServiceProvider services, IConfiguration appConfiguration, IMessageBroker messageBroker, ILogger<AuthController> logger)
         {
-            _userRepository = userRepo;
-            _confirmationTokenRepository = confirmationTokenRepo;
-            _passwordResetTokenRepository = passwordResetTokenRepository;
+            _services = services;
             _appConfiguration = appConfiguration;
             _messageBroker = messageBroker;
             _logger = logger;
@@ -55,7 +52,12 @@ namespace MyNotesApplication.Controllers
             string email = authData.Email;
             string password = authData.Password;
 
-            User? user = _userRepository.Get(u => u.Email == email).FirstOrDefault();
+            User? user = null;
+            using (var context = _services.GetService<MyDBContext>())
+            {
+                user = context.Users.AsNoTracking().Where(u => u.Email == email).FirstOrDefault();
+            }
+            
             if (user is null) return NotFound();
             if (!user.EmailConfirmed) return Unauthorized(new { message = "account not activated", email = user.Email });
 
@@ -115,25 +117,34 @@ namespace MyNotesApplication.Controllers
             string password = registerData.Password;
             string username = registerData.Username;
 
-            User? user = _userRepository.Get(u => u.Email == email || u.Username == username).FirstOrDefault();
+            User? user = null;
+            ConfirmationToken createdToken = null;
+            using(var context = _services.GetService<MyDBContext>())
+            {
+                user = context.Users.AsNoTracking().Where(u => u.Email == email || u.Username == username).FirstOrDefault();
 
-            if (user is not null) return Conflict();
+                if (user is not null) return Conflict();
 
-            User newUser = new User();
-            newUser.Email = email;
-            newUser.Password = password;
-            newUser.Username = username;
-            newUser.EmailConfirmed = false;
+                User newUser = new User();
+                newUser.Email = email;
+                newUser.Password = password;
+                newUser.Username = username;
+                newUser.EmailConfirmed = false;
 
-            PasswordHasher<User> ph = new PasswordHasher<User>();
-            newUser.Password = ph.HashPassword(newUser, password);
+                PasswordHasher<User> ph = new PasswordHasher<User>();
+                newUser.Password = ph.HashPassword(newUser, password);
 
-            User createdUser = _userRepository.Add(newUser);
+                context.Users.Add(newUser);
+                context.SaveChanges();
 
-            ConfirmationToken createdToken = _confirmationTokenRepository.Add(GenerateNewRegistrationToken(newUser));
+                createdToken = GenerateNewRegistrationToken(newUser);
 
+                context.ConfirmationTokens.Add(createdToken);
+                context.SaveChanges();
+            }
+            
             var confirmationUrl = Url.Action("EmailConfirm", "Auth", new { confirmationGuidUrl = createdToken.ConfirmationGUID }, protocol: HttpContext.Request.Scheme);
-            SendEmail(newUser.Email, "Подтвердите свою почту", $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confirmationUrl}'>Подтвердить</a>");
+            SendEmail(user.Email, "Подтвердите свою почту", $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confirmationUrl}'>Подтвердить</a>");
 
             return Ok(new { message = "confirm email" });
         }
@@ -151,18 +162,24 @@ namespace MyNotesApplication.Controllers
 
             string email = emailData.Email;
 
-            User? user = _userRepository.Get(u => u.Email == email).FirstOrDefault();
-
-            if (user is null) return BadRequest(new {message = "no user with such email"});
-            if (user.EmailConfirmed) return BadRequest(new { message = "already activated" });
-
-            ConfirmationToken? oldToken = _confirmationTokenRepository.Get(t => t.UserId == user.Id).FirstOrDefault();
-            if(oldToken is not null)
+            User? user = null;
+            ConfirmationToken newToken = null;
+            using (var context = _services.GetService<MyDBContext>()) 
             {
-                _confirmationTokenRepository.Delete(oldToken);
-            }
+                context.Users.AsNoTracking().Where(u => u.Email == email).FirstOrDefault();
+                if (user is null) return BadRequest(new { message = "no user with such email" });
+                if (user.EmailConfirmed) return BadRequest(new { message = "already activated" });
 
-            ConfirmationToken newToken = _confirmationTokenRepository.Add(GenerateNewRegistrationToken(user));
+                ConfirmationToken? oldToken = context.ConfirmationTokens.Where(t => t.UserId == user.Id).FirstOrDefault();
+                if (oldToken is not null)
+                {
+                    context.ConfirmationTokens.Remove(oldToken);
+                    context.SaveChanges();
+                }
+                newToken = GenerateNewRegistrationToken(user);
+                context.ConfirmationTokens.Add(newToken);
+                context.SaveChanges();
+            } 
 
             var confirmationUrl = Url.Action("EmailConfirm", "Auth", new { confirmationGuidUrl = newToken.ConfirmationGUID }, protocol: HttpContext.Request.Scheme);
             SendEmail(user.Email, "Подтвердите свою почту", $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confirmationUrl}'>Подтвердить</a>");
@@ -170,6 +187,7 @@ namespace MyNotesApplication.Controllers
             return Ok();
         }
 
+        /*
         [HttpGet]
         [Route("EmailConfirm/{confirmationGuidUrl}")]
         public async Task<IActionResult> EmailConfirm(string confirmationGuidUrl)
@@ -247,6 +265,7 @@ namespace MyNotesApplication.Controllers
 
             return Ok();
         }
+        */
 
 
         public record AuthData(string Email, string Password);

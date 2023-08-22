@@ -1,15 +1,13 @@
-﻿
-using MyNotesApplication.Data.Interfaces;
-using MyNotesApplication.Data.Models;
+﻿using MyNotesApplication.Data.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using static MyNotesApplication.Controllers.NotesController;
 using Microsoft.AspNetCore.Identity;
 
 namespace MyNotesApplication.Controllers
 {
+    /*
     [Route("api/v1/Notes")]
     public class NotesController : Controller
     {
@@ -245,4 +243,5 @@ namespace MyNotesApplication.Controllers
 
         public record NewNoteData(string Name, string Text, string PathToFile, int BoardId, int ColumnId, int OrderPlace);
     }
+    */
 }

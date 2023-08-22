@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using MyNotesApplication.Data.Interfaces;
 using MyNotesApplication.Data.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
@@ -11,6 +10,7 @@ using System.Security.Claims;
 
 namespace MyNotesApplication.Controllers
 {
+    /*
     [Route("api/v1/Files")]
     public class FilesController : Controller
     {
@@ -155,4 +155,5 @@ namespace MyNotesApplication.Controllers
             return new JwtSecurityTokenHandler().ReadJwtToken(token).Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Name).Value;
         }
     }
+    */
 }
