@@ -126,7 +126,7 @@ namespace MyNotesApplication.Controllers
             string username = GetUsernameFromJwtToken();
 
             Board? board = _boardRepository.Get(BoardId);
-            if (board == null) return NotFound();
+            if (board is null) return NotFound();
 
             User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
             if (!IsUserAllowedToInteractWithBoard(user, board)) return Forbid();
@@ -146,12 +146,16 @@ namespace MyNotesApplication.Controllers
         {
             string username = GetUsernameFromJwtToken();
 
-            NewBoardData? boardData = await HttpContext.Request.ReadFromJsonAsync<NewBoardData>();
+            var boardData = HttpContext.Request.ReadFromJsonAsync<NewBoardData>();
 
             User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
 
             Board newBoard = new Board();
-            newBoard.Name = boardData.Name;
+
+            NewBoardData? newBoardData = await boardData;
+            if (newBoardData is null) return BadRequest();
+
+            newBoard.Name = newBoardData.Name;
 
             Board board = _boardRepository.Add(newBoard);
 
@@ -178,17 +182,20 @@ namespace MyNotesApplication.Controllers
         {
             string username = GetUsernameFromJwtToken();
 
-            UserToInviteData? userToInviteData = await HttpContext.Request.ReadFromJsonAsync<UserToInviteData>();
+            var inviteData = HttpContext.Request.ReadFromJsonAsync<UserToInviteData>();
 
             User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
+
+            UserToInviteData? userToInviteData = await inviteData;
+            if (userToInviteData is null) return BadRequest();
             if (user.Email == userToInviteData.Email) return Conflict();
 
             User? userToInvite = _userRepository.Get(u => u.Email == userToInviteData.Email).FirstOrDefault();
-            if(userToInvite == null) return BadRequest();
+            if(userToInvite is null) return BadRequest();
 
             Board? board = _boardRepository.Get(boardId);
 
-            if (board == null) return BadRequest();
+            if (board is null) return BadRequest();
             if (!IsUserAllowedToInteractWithBoard(user, board, UserBoardRoles.OWNER)) return Forbid();
 
             InvitationToken createdToken = new InvitationToken();
@@ -214,7 +221,7 @@ namespace MyNotesApplication.Controllers
         {
             InvitationToken? token = _invitationTokenRepository.Get(i => i.InvitationGUID == invitationGUID).FirstOrDefault();
 
-            if (token == null) return BadRequest("no such token found");
+            if (token is null) return BadRequest("no such token found");
             if (token.ExpirationTime < DateTime.UtcNow) return BadRequest("Token expired, request it again in registration form");
 
             UserBoardRole newUbr = new UserBoardRole();

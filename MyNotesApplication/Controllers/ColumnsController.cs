@@ -43,14 +43,14 @@ namespace MyNotesApplication.Controllers
         private bool IsUserAllowedToInteractWithBoard(User user, Board board)
         {
             UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.BoardId == board.Id).FirstOrDefault();
-            if (ubr == null) return false;
+            if (ubr is null) return false;
             return true;
         }
 
         private bool IsUserAllowedToInteractWithBoard(User user, Board board, UserBoardRoles role)
         {
             UserBoardRole? ubr = _userBoardRoleRepository.Get(u => u.UserId == user.Id && u.BoardId == board.Id && u.Role == role.ToString()).FirstOrDefault();
-            if (ubr == null) return false;
+            if (ubr is null) return false;
             return true;
         }
 
@@ -68,7 +68,7 @@ namespace MyNotesApplication.Controllers
             string username = GetUsernameFromJwtToken();
 
             Board? board = _boardRepository.Get(BoardId);
-            if (board == null) return BadRequest();
+            if (board is null) return BadRequest();
 
             User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
             if(!IsUserAllowedToInteractWithBoard(user, board)) return Forbid();
@@ -101,12 +101,15 @@ namespace MyNotesApplication.Controllers
         public async Task<IActionResult> Create()
         {
             string username = GetUsernameFromJwtToken();
-            NewColumnData? newColumnData = await HttpContext.Request.ReadFromJsonAsync<NewColumnData>();
+            var columnData = HttpContext.Request.ReadFromJsonAsync<NewColumnData>();
 
             User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
 
+            NewColumnData? newColumnData = await columnData;
+            if (newColumnData is null) return BadRequest();
+
             Board? board = _boardRepository.Get(newColumnData.BoardId);
-            if (board == null) return BadRequest();
+            if (board is null) return BadRequest();
             if (!IsUserAllowedToInteractWithBoard(user, board, UserBoardRoles.OWNER)) return Forbid();
 
             Column newColumn = new Column();
@@ -161,7 +164,7 @@ namespace MyNotesApplication.Controllers
         public async Task<IActionResult> Update(int columnId)
         {
             string username = GetUsernameFromJwtToken();
-            EditColumnData? columnData = await HttpContext.Request.ReadFromJsonAsync<EditColumnData>();
+            var columnData = HttpContext.Request.ReadFromJsonAsync<EditColumnData>();
 
             User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
 
@@ -171,8 +174,10 @@ namespace MyNotesApplication.Controllers
             Board? board = _boardRepository.Get(column.BoardId);
             if (!IsUserAllowedToInteractWithBoard(user, board, UserBoardRoles.OWNER)) return Forbid();
 
-            column.Name = columnData.Name;
-            column.OrderPlace = columnData.OrderPlace;
+            EditColumnData? data = await columnData;
+            if(data is null) return BadRequest();
+            column.Name = data.Name;
+            column.OrderPlace = data.OrderPlace;
 
             _columnRepository.Update(column);
 

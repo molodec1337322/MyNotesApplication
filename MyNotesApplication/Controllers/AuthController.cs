@@ -56,7 +56,7 @@ namespace MyNotesApplication.Controllers
             string password = authData.Password;
 
             User? user = _userRepository.Get(u => u.Email == email).FirstOrDefault();
-            if (user == null) return NotFound();
+            if (user is null) return NotFound();
             if (!user.EmailConfirmed) return Unauthorized(new { message = "account not activated", email = user.Email });
 
             PasswordHasher<User> ph = new PasswordHasher<User>();
@@ -117,7 +117,7 @@ namespace MyNotesApplication.Controllers
 
             User? user = _userRepository.Get(u => u.Email == email || u.Username == username).FirstOrDefault();
 
-            if (user != null) return Conflict();
+            if (user is not null) return Conflict();
 
             User newUser = new User();
             newUser.Email = email;
@@ -153,11 +153,11 @@ namespace MyNotesApplication.Controllers
 
             User? user = _userRepository.Get(u => u.Email == email).FirstOrDefault();
 
-            if (user == null) return BadRequest(new {message = "no user with such email"});
+            if (user is null) return BadRequest(new {message = "no user with such email"});
             if (user.EmailConfirmed) return BadRequest(new { message = "already activated" });
 
             ConfirmationToken? oldToken = _confirmationTokenRepository.Get(t => t.UserId == user.Id).FirstOrDefault();
-            if(oldToken != null)
+            if(oldToken is not null)
             {
                 _confirmationTokenRepository.Delete(oldToken);
             }
@@ -176,7 +176,7 @@ namespace MyNotesApplication.Controllers
         {
             ConfirmationToken? token = _confirmationTokenRepository.Get(t => t.ConfirmationGUID == confirmationGuidUrl).FirstOrDefault();
 
-            if (token == null) return BadRequest("no such token found");
+            if (token is null) return BadRequest("no such token found");
             if (token.ExpiredDate < DateTime.UtcNow) return BadRequest("Token expired, request it again in registration form");
 
             User user = _userRepository.Get(token.UserId);
@@ -195,10 +195,10 @@ namespace MyNotesApplication.Controllers
             EmailData? emailData = await HttpContext.Request.ReadFromJsonAsync<EmailData>();
 
             User? user = _userRepository.Get(u => u.Email == emailData.Email).FirstOrDefault();
-            if (user == null) return BadRequest("No such user");
+            if (user is null) return BadRequest("No such user");
 
             PasswordResetToken? resetToken = _passwordResetTokenRepository.Get(t => t.UserId == user.Id).FirstOrDefault();
-            if (resetToken != null) _passwordResetTokenRepository.Delete(resetToken);
+            if (resetToken is not null) _passwordResetTokenRepository.Delete(resetToken);
 
             resetToken = new PasswordResetToken();
             resetToken.UserId = user.Id;
@@ -226,18 +226,21 @@ namespace MyNotesApplication.Controllers
         [Route("NewPasswordConfirm/{resetToken}")]
         public async Task<IActionResult> NewPasswordConfirm(string resetToken)
         {
+            var passwordData = HttpContext.Request.ReadFromJsonAsync<NewPasswordData>();
+
             PasswordResetToken? token = _passwordResetTokenRepository.Get(t => t.ConfirmationGUID == resetToken).FirstOrDefault();
 
-            NewPasswordData? passwordData = await HttpContext.Request.ReadFromJsonAsync<NewPasswordData>();
-
-            if (token == null) return BadRequest("no such token found");
+            if (token is null) return BadRequest("no such token found");
             if (token.ExpiredDate < DateTime.UtcNow) return BadRequest("Token expired, request it again in registration form");
 
             User user = _userRepository.Get(token.UserId);
-            user.Password = passwordData.password;
+
+            NewPasswordData? newPasswordData = await passwordData;
+            if (newPasswordData is null) return BadRequest();
+            user.Password = newPasswordData.password;
 
             PasswordHasher<User> ph = new PasswordHasher<User>();
-            user.Password = ph.HashPassword(user, passwordData.password);
+            user.Password = ph.HashPassword(user, newPasswordData.password);
 
             _passwordResetTokenRepository.Delete(token);
             _userRepository.Update(user);
