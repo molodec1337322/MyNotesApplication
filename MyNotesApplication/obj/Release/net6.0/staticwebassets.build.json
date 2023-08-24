@@ -1,0 +1,37 @@
+{
+  "Version": 1,
+  "Hash": "nR06R31mIUOjx9RdD7CL3bcbBvxENHQYnhCmknNXQQw=",
+  "Source": "MyNotesApplication",
+  "BasePath": "_content/MyNotesApplication",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "MyNotesApplication\\wwwroot",
+      "Source": "MyNotesApplication",
+      "ContentRoot": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\",
+      "BasePath": "_content/MyNotesApplication",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\Files\\4yvccypq.jpeg",
+      "SourceId": "MyNotesApplication",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\Molodec\\source\\repos\\MyNotesApplication\\MyNotesApplication\\wwwroot\\",
+      "BasePath": "_content/MyNotesApplication",
+      "RelativePath": "Files/4yvccypq.jpeg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\Files\\4yvccypq.jpeg"
+    }
+  ]
+}

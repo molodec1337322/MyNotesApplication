@@ -304,7 +304,17 @@ namespace MyNotesApplication.Controllers
         [Route("Delete/{BoardId}")]
         public async Task<IActionResult> DeleteBoard(int BoardId)
         {
-            return Ok();
+            var username = GetUsernameFromJwtToken();
+            User? user = _userRepository.Get(u => u.Username == username).FirstOrDefault();
+
+            Board? board = _boardRepository.Get(BoardId);
+            if (board is null) return BadRequest();
+
+            if (!IsUserAllowedToInteractWithBoard(user, board, UserBoardRoles.OWNER)) return Forbid();
+
+            _boardRepository.Delete(board);
+
+            return Ok(new { message = "deleted", boardId = BoardId });
         }
 
         public record BoardData(int id, string Name);
