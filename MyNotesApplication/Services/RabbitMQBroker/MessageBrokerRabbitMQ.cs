@@ -50,8 +50,6 @@ namespace MyNotesApplication.Services.RabbitMQBroker
 
                 policy.Execute(() =>
                 {
-                    //var props = channel.CreateBasicProperties();
-
                     channel.BasicPublish(
                         exchange: "",
                         routingKey: _configuration.GetValue<string>("BrokerNameQueue"),

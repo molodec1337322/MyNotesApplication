@@ -41,7 +41,7 @@ namespace MyNotesApplication.Services.RabbitMQBroker
                 policy.Execute(() =>
                 {
                     _connection = _connectionFactory.CreateConnection();
-                });
+                });  
 
                 if (IsConnected)
                 {
